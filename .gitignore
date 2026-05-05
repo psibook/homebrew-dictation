@@ -1,0 +1,24 @@
+# Generated outputs (reproducible from harness)
+outputs/
+
+# Vendored whisper.cpp source tree — re-clone per INSTALL.md (3+ GB)
+tools/whisper.cpp/
+
+# Backend wrapper scratch (preserved for now under tools/backends/ but no content yet)
+tools/backends/.gitkeep
+
+# Model weight files anywhere
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.gguf
+*.mlx
+
+# Python / uv / venv
+__pycache__/
+*.pyc
+.venv/
+
+# macOS noise
+.DS_Store
