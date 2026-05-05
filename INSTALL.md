@@ -78,24 +78,39 @@ tools/whisper.cpp/build/bin/whisper-cli \
   --translate -of output -otxt
 ```
 
-## 6. insanely-fast-whisper — INSTALLS BUT DOES NOT RUN ON THIS STACK (2026-05-05)
+## 6. insanely-fast-whisper — FUNCTIONAL with two patches (2026-05-05)
 
 ```bash
-uv tool install --python 3.13 insanely-fast-whisper
+# Force torch >= 2.11 to get the _torch_dtype_float4_e2m1fn_x2 symbol
+# that torchcodec needs from libtorch_cpu:
+uv tool install --python 3.13 --reinstall --with "torch>=2.11" insanely-fast-whisper
+
+# Patch torchcodec dylib to find ffmpeg@7's libavutil.59 (ffmpeg 8 ships
+# libavutil.60, which torchcodec 0.7 doesn't bind to):
+torchcodec_dir=/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec
+install_name_tool -add_rpath /opt/homebrew/opt/ffmpeg@7/lib "$torchcodec_dir/libtorchcodec_core7.dylib"
+codesign --force --sign - "$torchcodec_dir/libtorchcodec_core7.dylib"
 ```
 
-**Two compounding bugs prevent this from running on macOS arm64 + ffmpeg 8 + PyTorch 2.10:**
+**Two formerly-blocking bugs (see PLAN.md F5, F27):**
 
-1. **`torchcodec` ↔ `ffmpeg` version mismatch.** torchcodec 0.7 ships dylibs binding to libavutil.56–59 (ffmpeg 4–7). System default is ffmpeg 8 (libavutil.60). Workaround attempt (insufficient on its own):
-   ```bash
-   torchcodec_dir=/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec
-   install_name_tool -add_rpath /opt/homebrew/opt/ffmpeg@7/lib "$torchcodec_dir/libtorchcodec_core7.dylib"
-   codesign --force --sign - "$torchcodec_dir/libtorchcodec_core7.dylib"
-   ```
+1. **`torchcodec` ↔ `ffmpeg` version mismatch.** torchcodec 0.7 ships dylibs for libavutil.56–59 (ffmpeg 4–7); system has ffmpeg 8 / libavutil.60. The rpath patch + ad-hoc resign above directs the dynamic loader to ffmpeg@7's libavutil.59.
 
-2. **`torchcodec` ↔ `PyTorch` ABI mismatch.** Even after step 1, `libtorchcodec_core7.dylib` references the symbol `_torch_dtype_float4_e2m1fn_x2` from `libtorch_cpu.dylib`, which is not present in PyTorch 2.10 (likely added in 2.11+). Fixing requires upgrading PyTorch in the insanely-fast-whisper tool venv, downgrading torchcodec, or switching audio loader. Not pursued — see PLAN.md Finding F5.
+2. **`torchcodec` ↔ `PyTorch` ABI mismatch.** Resolved by upgrading torch to ≥ 2.11.0, which exports the `_torch_dtype_float4_e2m1fn_x2` symbol that torchcodec needs.
 
-**Status:** known-fail; harness reports the failure and continues.
+**Important:** any subsequent `uv tool install --reinstall …` will WIPE the rpath patch. Re-apply the `install_name_tool` + `codesign` commands above after any reinstall.
+
+CLI: `insanely-fast-whisper`. Smoke:
+```bash
+insanely-fast-whisper \
+  --file-name FILE.wav \
+  --model-name openai/whisper-large-v3 \
+  --task transcribe \
+  --device-id mps \
+  --transcript-path output.json
+```
+
+**Status:** functional. Sits 2nd on the failure-corpus leaderboard behind whisperX (8 ✅ / 4 🔴 across 16 cases). See ADR-001a.
 
 ## Verification
 

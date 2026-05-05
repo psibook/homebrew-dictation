@@ -100,13 +100,11 @@ Performance under paravirtualised Metal on this VM:
 
 Same words; different sentence boundary inferred at the same audio position. This is exactly the kind of variation worth studying under harder (noisy / accented / overlapping-speech) inputs — see Phase 1 follow-up.
 
-### F5 — `insanely-fast-whisper` cannot load on this stack (two compounding bugs)
+### F5 — `insanely-fast-whisper`: two compounding bugs (RESOLVED 2026-05-05 → see F27)
 
-Bug 5a — torchcodec wants `libavutil.56–59`; system has `libavutil.60`. Workaround feasible (ffmpeg@7 + rpath patch + ad-hoc resign).
+Bug 5a — torchcodec wants `libavutil.56–59`; system has `libavutil.60`. Workaround: ffmpeg@7 + rpath patch + ad-hoc resign.
 
-Bug 5b — Even with 5a fixed, `libtorchcodec_core7.dylib` references the symbol `_torch_dtype_float4_e2m1fn_x2` from `libtorch_cpu.dylib`, not present in the installed PyTorch 2.10. This is a **torchcodec/PyTorch ABI mismatch**. Fixing this would require either (a) upgrading PyTorch to a version that exports the FP4 datatype symbol (likely PyTorch ≥ 2.11.0 — check), or (b) downgrading torchcodec, or (c) switching the audio loader. Decision: not worth the time; insanely-fast-whisper is a transformers-pipeline wrapper and adds little novel coverage vs the other four distributions.
-
-**Status:** marked known-fail in `tools/whisper-compare.sh`. Lieutenant has 4 functional backends, sufficient for failure-mode comparison.
+Bug 5b — `libtorchcodec_core7.dylib` references the symbol `_torch_dtype_float4_e2m1fn_x2` from `libtorch_cpu.dylib`, not present in PyTorch 2.10. **Resolved by upgrading torch to 2.11.0** — see F27.
 
 ---
 
@@ -356,12 +354,92 @@ E2B remains untested (low marginal value).
 
 ---
 
-## Open questions (post Phase 3)
+## Phase 4 — `insanely-fast-whisper` revival (2026-05-05)
+
+F5 known-fail resolved. Forced torch 2.11.0 into the tool venv via `uv tool install --python 3.13 --reinstall --with "torch>=2.11" insanely-fast-whisper`, re-applied the rpath patch (`install_name_tool -add_rpath /opt/homebrew/opt/ffmpeg@7/lib …`) and ad-hoc resign on `libtorchcodec_core7.dylib`. Verified the symbol `_torch_dtype_float4_e2m1fn_x2` now exports via `nm | grep`. Smoke test on Simon's clip succeeded.
+
+### F27 — insanely-fast-whisper now FUNCTIONAL + ranked 2nd in the corpus
+
+Run across all 16 corpus inputs (results in `corpus-results/2026-05-05-163500-ifw-revival/`):
+
+| # | Test | IFW output | Verdict |
+|---:|---|---|---|
+| 01 | Silence (30 s) | `"Thank you."` | 🔴 hallucination |
+| 02 | 8 kHz phone | clean | ✅ |
+| 03 | 6 kbps Opus | "NLXVLM" | 🟠 |
+| 04 | 600 ms | `"Thank you."` | 🔴 |
+| 05 | JFK | clean | ✅ |
+| 06 | 440 Hz tone | clean | ✅ |
+| 07 | Speaker overlap | "MLXVLM → Gemma" substitution | 🟠 |
+| 08 | Pink noise | `"yes"` | 🔴 (a *fourth* distinct hallucination on this input) |
+| 09 | Pseudo-whispered | clean | ✅ |
+| 10 | Glasgow Scottish | clean (proper punct) | ✅ |
+| 11 | Melbourne Australian | "**spurns**" | 🔴 |
+| 12 | Mumbai Indian | lowercase, no punct | 🟡 |
+| 13 | Real whispered ASMR | clean | ✅ |
+| 14 | 3-tone chord | clean | ✅ |
+| 15 | Beethoven podcast bed | clean | ✅ |
+| 16 | Orchestral near-equal | "this right here" | 🔴 |
+
+IFW count: **8 ✅ / 1 🟡 / 3 🟠 / 4 🔴** — slots into 2nd place behind whisperX.
+
+### Updated final leaderboard (16 cases, 6 backends)
+
+| Backend | ✅ Clean | 🟡 Drift | 🟠 Partial | 🔴 Hard fail |
+|---|---:|---:|---:|---:|
+| **whisperX** | **12** | 0 | 2 | 2 |
+| insanely-fast-whisper | 8 | 1 | 3 | 4 |
+| mlx-whisper | 7 | 2 | 3 | 4 |
+| whisper.cpp | 6 | 4 | 2 | 4 |
+| openai-whisper | 5 | 3 | 3 | 5 |
+| Gemma 4 E4B | 2 | 3 | 7 | 4 |
+
+IFW behaves similarly to mlx-whisper (same model weights, similar CPU/MPS path) but with slightly cleaner outputs. Like the other PyTorch-family backends, it inherits the Australian "spurns" failure (F12) and lacks VAD-style silence safety. **Pink noise is a four-way distinct failure now**: openai-whisper "Thank you", mlx-whisper "Thank you", whisperX "Yes, ma'am", whisper.cpp "this", IFW "yes" — five backends, four different hallucinations.
+
+### F28 — Pink noise produces FOUR distinct hallucinations across five backends
+
+| Backend | Output on case 08 |
+|---|---|
+| openai-whisper | "Thank you." |
+| mlx-whisper | "Thank you." |
+| whisperX | "Yes, ma'am." |
+| whisper.cpp | "this" |
+| insanely-fast-whisper | "yes" |
+| Gemma 4 E4B | ". king" |
+
+Five Whisper-family backends (4 + IFW), four distinct hallucinations — and Gemma 4 E4B's near-empty `". king"` makes six total outputs. Pink noise is the canonical low-SNR failure but the *failure shape* is heterogeneous. **No two backends fail identically.**
+
+### ADR-001a UPDATE — IFW slot
+
+ADR-001a (Whisper backend defaults) gains one row:
+
+| Use case | Recommended | Notes |
+|---|---|---|
+| Default, unknown content | **whisperX** | Unchanged |
+| Speed-critical, known-clean | **mlx-whisper** | Unchanged |
+| Reproducibility / no Python | **whisper.cpp** | Unchanged |
+| **transformers-pipeline / batch / MPS-first workflows** | **insanely-fast-whisper** | NEW — comparable quality to mlx-whisper, integrates better with transformers pipelines downstream |
+| Reference / debugging | openai-whisper | Unchanged |
+
+### Install-recipe note
+
+`uv tool install --reinstall` will **wipe the rpath patch** on `libtorchcodec_core7.dylib`. Re-apply after any reinstall:
+
+```bash
+torchcodec_dir=/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec
+install_name_tool -add_rpath /opt/homebrew/opt/ffmpeg@7/lib "$torchcodec_dir/libtorchcodec_core7.dylib"
+codesign --force --sign - "$torchcodec_dir/libtorchcodec_core7.dylib"
+```
+
+INSTALL.md updated to reflect this.
+
+---
+
+## Open questions (post Phase 4)
 
 - Phase 3 hardening (T2 repeat, T3 resource bound, T4 network policy, T5 reboot survival) against all backends — formalise when?
-- Music pre-processing (Demucs / MDX-Net source separation) before Whisper for media audio (the F24 failure mode) — scope as follow-on contract?
+- Music pre-processing (Demucs / MDX-Net source separation) before Whisper for media audio (F24) — scope as follow-on contract?
 - 31B-dense Gemma 4 (text-only, no audio) for harder reasoning tasks — install for completeness?
-- Should `insanely-fast-whisper` be removed from the install set or kept with the known-fail flag for revisit later?
 
 ---
 

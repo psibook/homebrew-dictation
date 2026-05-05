@@ -2,10 +2,10 @@
 # tests/smoke.sh — minimal end-to-end test on the bundled demo file.
 #
 # Pass criteria:
-#   - 4/5 backends produce non-empty translation output
-#   - insanely-fast-whisper expected to fail (Finding F5)
+#   - 5/5 backends produce non-empty translation output
+#   - insanely-fast-whisper functional as of Phase 4 (F5 resolved -> F27)
 #
-# Exits 0 if 4/5 pass, 1 otherwise.
+# Exits 0 if 5/5 pass, 1 otherwise.
 
 set -uo pipefail
 
@@ -58,7 +58,7 @@ for bk in openai-whisper mlx-whisper whisperx whisper-cpp insanely-fast-whisper;
 done
 
 echo
-echo "  Summary: $pass pass, $fail fail (target: 4 pass)"
+echo "  Summary: $pass pass, $fail fail (target: 5 pass)"
 
-# 4/5 pass = exit 0; below 4 = exit 1
-[ "$pass" -ge 4 ] && exit 0 || exit 1
+# 5/5 pass = exit 0; below 5 = exit 1
+[ "$pass" -ge 5 ] && exit 0 || exit 1
