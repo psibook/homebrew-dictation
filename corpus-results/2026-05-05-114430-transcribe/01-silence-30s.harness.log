@@ -1,0 +1,26 @@
+Input:  test-corpus/01-silence-30s.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-114430-01-silence-30s-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-114430-01-silence-30s-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 16.75      | you 
+mlx-whisper            | 3.46       | you 
+whisperx               | 21.70      |  
+whisper-cpp            | 10.67      |  Thank you. 
+insanely-fast-whisper  | 9.83       | (no output) 
+
+Full outputs: outputs/2026-05-05-114430-01-silence-30s-transcribe/

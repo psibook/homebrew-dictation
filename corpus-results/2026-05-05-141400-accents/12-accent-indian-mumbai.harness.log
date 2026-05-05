@@ -1,0 +1,26 @@
+Input:  test-corpus/12-accent-indian-mumbai.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-141939-12-accent-indian-mumbai-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-141939-12-accent-indian-mumbai-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 62.21      | please call stella ask her to bring these things with her from the store six spoons of fresh snow peas five thick slabs of blue cheese and maybe a snack for her brother bob we need a small plastic sna 
+mlx-whisper            | 5.44       | Please call Stella. Ask her to bring these things with her from the store. Six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob. We need a small plasti 
+whisperx               | 39.63      | Please call Stella. Ask her to bring these things with her from the store. Six spoons of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob. We need a small plastic 
+whisper-cpp            | 32.40      |  please call stella ask her to bring these things with her from the store six spoons of fresh snow peas five thick slabs of blue cheese and maybe a snack for her brother bob  we need a small plastic s 
+insanely-fast-whisper  | 7.38       | (no output) 
+
+Full outputs: outputs/2026-05-05-141939-12-accent-indian-mumbai-transcribe/

@@ -110,12 +110,134 @@ Bug 5b — Even with 5a fixed, `libtorchcodec_core7.dylib` references the symbol
 
 ---
 
+## Phase 1.5 — Synthetic Failure Corpus (2026-05-05)
+
+9 synthesised inputs in `test-corpus/01-09.wav` covering documented Whisper failure categories. Run with `tests/run-failure-corpus.sh transcribe`. Results saved to `corpus-results/2026-05-05-114430-transcribe/SUMMARY.md`.
+
+### F6 — VAD pre-filter is the silence/short-clip safety net
+
+WhisperX's pyannote-VAD layer prevents the canonical `"Thank you"` / `"you"` hallucinations on silent audio (case 01: 30 s silence) and ≤1-second clips (case 04: 600 ms). Three of four backends hallucinate; whisperX produces empty output. Binary outcome on two independent inputs — pattern is structural, not noise.
+
+### F7 — 6 kbps Opus codec round-trip breaks unfamiliar lexicon, differently per backend
+
+Case 03 (Simon's clip → 6 kbps Opus → re-decoded). Same input, four backends, three distinct misperceptions of `MLXVLM`:
+
+| Backend | What it heard |
+|---|---|
+| openai-whisper / whisperX / whisper.cpp | `NLXVLM` |
+| mlx-whisper | `MLSVLM` (unique) |
+
+Identical models would produce identical errors. They don't, so the backends are non-identical on degraded inputs. By contrast, **8 kHz sampling-rate downgrade (case 02) is NOT a failure mode** — all four produce clean output.
+
+### F8 — Pink noise at high amplitude breaks ALL 4 backends; failure outputs diverge
+
+Case 08 (pink noise mixed at amplitude 0.4 with speech at 1.0):
+- openai-whisper: `"Thank you."`
+- mlx-whisper: `"Thank you."`
+- whisperX: `"Yes, ma'am."` (VAD didn't filter pink noise — speech-like spectrum)
+- whisper.cpp: `"this"` (1 word salvaged)
+
+Universal failure with three distinct hallucinations. **Pink noise is the canonical low-SNR failure for Whisper Large-v3.**
+
+### F9 — Speaker overlap has two distinct failure shapes
+
+Case 07 (Simon × Simon, 2 s offset):
+
+| Family | Failure mode |
+|---|---|
+| PyTorch family (openai-whisper, mlx-whisper, whisperX) | Substitute unfamiliar acronym `MLXVLM → Gemma`; merge speakers into one transcript |
+| whisper.cpp | **Sentence repetition** — replays first phrase. Segment splitter mishandles delay-overlap. |
+
+No backend marked overlap. Whisper has no diarisation; choose accordingly.
+
+### F10 — A 440 Hz tone overlay is not a failure mode
+
+Case 06: pure-tone music distractor doesn't break parsing. Real music likely would; this is an underconstrained test. **Refined in F16 with a 3-tone chord; same outcome.**
+
+### F11 — Pseudo-whispered synthesis is not a useful test
+
+Case 09: highpass + compressor preserves pitch (real whispered speech is voiceless). All 4 parsed cleanly. **Refined in F15 with real ASMR-whispered speech — also not a failure mode for Large-v3.**
+
+---
+
+## Phase 1.6 — Real-World Failure Samples (2026-05-05)
+
+5 additional inputs in `test-corpus/10-14.wav` from public sources. Three accent samples from [GMU Speech Accent Archive](https://accent.gmu.edu/) reading the standard "Please call Stella" passage; one real whispered ASMR clip from [archive.org](https://archive.org/details/ASMRWhisperingReading8r2ESNzVOOA); one richer chord-overlay synthesis. Results: `corpus-results/2026-05-05-141400-accents/SUMMARY.md`.
+
+### F12 — Australian English `spoons → spurns` failure mode REPRODUCED in 3 of 4 backends
+
+The Mozilla 2026 documented Australian-English failure case is real on this VM. Case 11 (Melbourne speaker, GMU SAA speakerid=140):
+
+| Backend | Output of "Six **spoons** of fresh snow peas" |
+|---|---|
+| openai-whisper | "Six **spurns** of…" 🔴 |
+| mlx-whisper | "Six **spurns** of…" 🔴 |
+| **whisperX** | "Six **spoons** of…" ✅ |
+| whisper.cpp | "Six **spurns** of…" 🔴 |
+
+Australian /uː/ shifts toward /ɜː/ ("err"), and Whisper Large-v3's lexicon-prior maps it to `spurns`. **Only whisperX (faster-whisper / CTranslate2 backend) recovers the correct word** — likely a different beam-search / temperature default. This single finding strengthens whisperX's case as default backend significantly: it now wins on TWO independent failure modes (silence + Australian).
+
+### F13 — Mumbai Indian English triggers normalization divergence between backends
+
+Case 12 (GMU SAA speakerid=426, Mumbai Indian English):
+
+| Backend | Output formatting |
+|---|---|
+| openai-whisper | unpunctuated, lowercased: "please call stella ask her to bring…" 🟡 |
+| mlx-whisper | normal: "Please call Stella. Ask her to bring…" ✅ |
+| whisperX | normal ✅ |
+| whisper.cpp | unpunctuated, lowercased 🟡 |
+
+Same model weights produce different normalisation behaviour by backend. Text content is correct in all 4 (`spoons`, not `spurns`). **Pipeline implication:** any downstream tool depending on consistent capitalisation/punctuation will see backend-dependent variation when accents trigger this codepath.
+
+### F14 — Glasgow Scottish does NOT break Whisper
+
+Case 10 (GMU SAA speakerid=82, Glasgow). All 4 backends transcribed cleanly. Despite Scottish English being notorious in older ASR literature, Whisper Large-v3's training appears to cover Glasgow rhotic consonants and vowel shifts well. Difference is only segmentation (comma vs period after "Stella" between mlx-whisper and the others).
+
+### F15 — Real whispered ASMR speech does NOT break Whisper
+
+Case 13 (30 s of YouTube ASMR speaker, extracted from archive.org). All 4 backends transcribed real whispered speech cleanly. Minor word-level errors (mlx-whisper: "I want it to" vs "I wanted to"; whisper.cpp: dropped 3 words in "there's a lot of things"). **No hallucinations, no major content loss.** Whisper's training set evidently covers whispered phonation well enough.
+
+### F16 — A 3-note chord (C-E-G) doesn't break Whisper either
+
+Case 14: richer than F10's 440 Hz tone. All 4 backends parsed cleanly, with the same minor punctuation drift seen in case 06. **Real music with vocals + dynamic-range / rhythm has not been tested directly.** Worth a follow-up if music+podcast scenarios become a concrete use case.
+
+---
+
+## Failure-mode count per backend (Phase 1.5 + 1.6 combined, 14 cases)
+
+| Backend | 🔴 Hard fail | 🟠 Partial | 🟡 Drift | ✅ Clean |
+|---|---:|---:|---:|---:|
+| **whisperX** | **1** | 2 | 0 | **11** |
+| mlx-whisper | 3 | 3 | 2 | 6 |
+| whisper.cpp | 2 | 2 | 4 | 6 |
+| openai-whisper | 4 | 3 | 3 | 4 |
+
+WhisperX is dominant on this corpus.
+
+---
+
+## ADR-001a — Whisper backend defaults (DRAFT, evidence locked)
+
+Based on F6, F8, F12, F13:
+
+| Use case | Recommended | Reasoning |
+|---|---|---|
+| Default, unknown content | **whisperX** | VAD prevents silence-hallucinations; only backend to handle Australian English's `spoons` correctly; consistent normalisation |
+| Speed-critical, known-clean speech | **mlx-whisper** | 3 s warm on a 14 s clip with paravirtualised Metal; same content quality as openai-whisper |
+| Reproducibility / no Python | **whisper.cpp** | Single binary, GGML format; watch for sentence-repetition on overlap (F9) and lowercased output on Indian accents (F13) |
+| Reference / debugging | openai-whisper | Slow CPU PyTorch; no special advantages on this corpus |
+
+`insanely-fast-whisper` excluded — see F5.
+
+---
+
 ## Open questions
 
-- ADR-001a: which Whisper backend(s) are the Lieutenant's defaults for which use case (translation, dictation, diarised transcription, fastest-warm, on-disk reproducibility)?
 - ADR-001b: Gemma 4 E2B or E4B for Phase 2?
 - Phase 3 timing: when to formalise T2–T5 against all backends?
 - Should `insanely-fast-whisper` be removed from the install set or kept with the known-fail flag for revisit later?
+- Real music + vocals (e.g. podcast-with-music-bed) untested — out of scope for this corpus or worth a small follow-on?
 
 ---
 

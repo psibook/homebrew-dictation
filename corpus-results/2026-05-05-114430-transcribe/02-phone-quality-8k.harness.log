@@ -1,0 +1,26 @@
+Input:  test-corpus/02-phone-quality-8k.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-114533-02-phone-quality-8k-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-114533-02-phone-quality-8k-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 37.87      | This right here is a quick voice memo. I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+mlx-whisper            | 3.26       | This right here is a quick voice memo. I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisperx               | 29.94      | This right here is a quick voice memo. I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisper-cpp            | 18.72      |  This right here is a quick voice memo. I want to try it out with MLXVLM, just going to see if it can be transcribed by Gemma and how well that works. 
+insanely-fast-whisper  | 6.90       | (no output) 
+
+Full outputs: outputs/2026-05-05-114533-02-phone-quality-8k-transcribe/

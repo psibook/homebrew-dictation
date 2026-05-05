@@ -1,0 +1,26 @@
+Input:  test-corpus/04-very-short-600ms.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-114848-04-very-short-600ms-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-114848-04-very-short-600ms-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 17.82      | Thank you. 
+mlx-whisper            | 2.88       | Thank you. 
+whisperx               | 18.40      |  
+whisper-cpp            | 9.14       |  Thank you. 
+insanely-fast-whisper  | 7.43       | (no output) 
+
+Full outputs: outputs/2026-05-05-114848-04-very-short-600ms-transcribe/

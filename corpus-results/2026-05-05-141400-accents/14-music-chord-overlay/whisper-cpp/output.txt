@@ -1,0 +1,2 @@
+ This right here is a quick voice memo I want to try it out with MLXVLM.
+ Just going to see if it can be transcribed by Gemma and how well that works.

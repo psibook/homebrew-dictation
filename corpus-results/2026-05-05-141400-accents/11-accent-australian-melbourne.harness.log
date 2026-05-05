@@ -1,0 +1,26 @@
+Input:  test-corpus/11-accent-australian-melbourne.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-141649-11-accent-australian-melbourne-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-141649-11-accent-australian-melbourne-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 69.13      | Please call Stella. Ask her to bring these things with her from the store. Six spurns of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob. We also need a small pl 
+mlx-whisper            | 5.16       | Please call Stella. Ask her to bring these things with her from the store. Six spurns of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob. We also need a small p 
+whisperx               | 42.90      | Please call Stella. Ask her to bring these things with her from the store. Six spoons of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob. We also need a small pl 
+whisper-cpp            | 43.95      |  Please call Stella. Ask her to bring these things with her from the store.  Six spurns of fresh snow peas, five thick slabs of blue cheese and maybe a snack for  her brother Bob. We also need a small 
+insanely-fast-whisper  | 8.60       | (no output) 
+
+Full outputs: outputs/2026-05-05-141649-11-accent-australian-melbourne-transcribe/

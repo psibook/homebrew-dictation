@@ -1,0 +1,26 @@
+Input:  test-corpus/05-jfk-canonical.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-114944-05-jfk-canonical-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-114944-05-jfk-canonical-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 28.61      | And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country. 
+mlx-whisper            | 3.19       | And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country. 
+whisperx               | 28.45      | And so, my fellow Americans, ask not what your country can do for you. Ask what you can do for your country. 
+whisper-cpp            | 18.22      |  And so, my fellow Americans,  ask not what your country can do for you,  ask what you can do for your country. 
+insanely-fast-whisper  | 7.70       | (no output) 
+
+Full outputs: outputs/2026-05-05-114944-05-jfk-canonical-transcribe/

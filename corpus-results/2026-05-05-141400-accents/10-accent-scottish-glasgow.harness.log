@@ -1,0 +1,26 @@
+Input:  test-corpus/10-accent-scottish-glasgow.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-141417-10-accent-scottish-glasgow-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-141417-10-accent-scottish-glasgow-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 61.64      | Please call Stella. Ask her to bring these things with her from the store. Six spoons of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob. We also need a small pl 
+mlx-whisper            | 5.88       | Please call Stella, ask her to bring these things with her from the store. Six spoons of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob. We also need a small pl 
+whisperx               | 37.82      | Please call Stella. Ask her to bring these things with her from the store. Six spoons of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob. We also need a small pl 
+whisper-cpp            | 38.42      |  Please call Stella. Ask her to bring these things with her from the store.  Six spoons of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob.  We also need a small 
+insanely-fast-whisper  | 8.27       | (no output) 
+
+Full outputs: outputs/2026-05-05-141417-10-accent-scottish-glasgow-transcribe/

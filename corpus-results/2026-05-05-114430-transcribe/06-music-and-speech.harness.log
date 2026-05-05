@@ -1,0 +1,26 @@
+Input:  test-corpus/06-music-and-speech.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-115110-06-music-and-speech-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-115110-06-music-and-speech-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 37.01      | This right here is a quick voice memo, I want to try it out with MLXVLM, just going to see if it can be transcribed by Gemma and how well that works. 
+mlx-whisper            | 3.07       | This right here is a quick voice memo I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisperx               | 30.40      | This right here is a quick voice memo. I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisper-cpp            | 23.79      |  This right here is a quick voice memo. I want to try it out with MLXVLM.  Just going to see if it can be transcribed by Gemma and how well that works. 
+insanely-fast-whisper  | 7.76       | (no output) 
+
+Full outputs: outputs/2026-05-05-115110-06-music-and-speech-transcribe/

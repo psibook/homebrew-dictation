@@ -1,0 +1,7 @@
+Args: {'audio': ['test-corpus/14-music-chord-overlay.wav'], 'model': 'mlx-community/whisper-large-v3-mlx', 'output_name': None, 'output_dir': 'outputs/2026-05-05-142020-14-music-chord-overlay-transcribe/mlx-whisper', 'output_format': 'txt', 'verbose': True, 'task': 'transcribe', 'language': 'en', 'temperature': 0, 'best_of': 5, 'patience': None, 'length_penalty': None, 'suppress_tokens': '-1', 'initial_prompt': None, 'condition_on_previous_text': True, 'fp16': True, 'compression_ratio_threshold': 2.4, 'logprob_threshold': -1.0, 'no_speech_threshold': 0.6, 'word_timestamps': False, 'prepend_punctuations': '"\'“¿([{-', 'append_punctuations': '"\'.。,，!！?？:：”)]}、', 'highlight_words': False, 'max_line_width': None, 'max_line_count': None, 'max_words_per_line': None, 'hallucination_silence_threshold': None, 'clip_timestamps': '0'}
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 114912.44it/s]
+[00:00.000 --> 00:07.000]  This right here is a quick voice memo I want to try it out with MLXVLM.
+[00:07.000 --> 00:14.000]  Just going to see if it can be transcribed by Gemma and how well that works.
+real 4.17
+user 2.15
+sys 1.63

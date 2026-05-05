@@ -1,0 +1,9 @@
+Args: {'audio': ['test-corpus/10-accent-scottish-glasgow.wav'], 'model': 'mlx-community/whisper-large-v3-mlx', 'output_name': None, 'output_dir': 'outputs/2026-05-05-141417-10-accent-scottish-glasgow-transcribe/mlx-whisper', 'output_format': 'txt', 'verbose': True, 'task': 'transcribe', 'language': 'en', 'temperature': 0, 'best_of': 5, 'patience': None, 'length_penalty': None, 'suppress_tokens': '-1', 'initial_prompt': None, 'condition_on_previous_text': True, 'fp16': True, 'compression_ratio_threshold': 2.4, 'logprob_threshold': -1.0, 'no_speech_threshold': 0.6, 'word_timestamps': False, 'prepend_punctuations': '"\'“¿([{-', 'append_punctuations': '"\'.。,，!！?？:：”)]}、', 'highlight_words': False, 'max_line_width': None, 'max_line_count': None, 'max_words_per_line': None, 'hallucination_silence_threshold': None, 'clip_timestamps': '0'}
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 66576.25it/s]
+[00:00.000 --> 00:03.700]  Please call Stella, ask her to bring these things with her from the store.
+[00:04.380 --> 00:10.560]  Six spoons of fresh snow peas, five thick slabs of blue cheese and maybe a snack for her brother Bob.
+[00:11.200 --> 00:14.740]  We also need a small plastic snake and a big toy frog for the kids.
+[00:15.660 --> 00:20.620]  She can scoop these things into three red bags and we'll go meet her on Wednesday at the train station.
+real 5.88
+user 2.45
+sys 2.56

@@ -1,0 +1,9 @@
+Args: {'audio': ['test-corpus/11-accent-australian-melbourne.wav'], 'model': 'mlx-community/whisper-large-v3-mlx', 'output_name': None, 'output_dir': 'outputs/2026-05-05-141649-11-accent-australian-melbourne-transcribe/mlx-whisper', 'output_format': 'txt', 'verbose': True, 'task': 'transcribe', 'language': 'en', 'temperature': 0, 'best_of': 5, 'patience': None, 'length_penalty': None, 'suppress_tokens': '-1', 'initial_prompt': None, 'condition_on_previous_text': True, 'fp16': True, 'compression_ratio_threshold': 2.4, 'logprob_threshold': -1.0, 'no_speech_threshold': 0.6, 'word_timestamps': False, 'prepend_punctuations': '"\'“¿([{-', 'append_punctuations': '"\'.。,，!！?？:：”)]}、', 'highlight_words': False, 'max_line_width': None, 'max_line_count': None, 'max_words_per_line': None, 'hallucination_silence_threshold': None, 'clip_timestamps': '0'}
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 95325.09it/s]
+[00:00.000 --> 00:05.000]  Please call Stella. Ask her to bring these things with her from the store.
+[00:05.000 --> 00:13.000]  Six spurns of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob.
+[00:13.000 --> 00:18.000]  We also need a small plastic snake and a big toy frog for the kids.
+[00:18.000 --> 00:24.000]  She can scoop these things into three red bags and we will go meet her Wednesday at the train station.
+real 5.16
+user 2.69
+sys 1.95

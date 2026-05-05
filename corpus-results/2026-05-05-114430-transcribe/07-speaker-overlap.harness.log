@@ -1,0 +1,26 @@
+Input:  test-corpus/07-speaker-overlap.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-115252-07-speaker-overlap-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-115252-07-speaker-overlap-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 36.78      | This right here is a quick voice memo, I want to try it out with Gemma, just going to see if it can be transcribed by Gemma and how well that works. 
+mlx-whisper            | 3.54       | This right here is a quick voice memo. I want to try it out with Gemma. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisperx               | 31.49      | This right here is a quick voice memo. I want to try it out with Gemma. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisper-cpp            | 23.80      |  This right here is a quick voice memo. This right here is a quick voice memo. I want to try it out with Gemma.  Just going to see if it can be transcribed by Gemma and how well that works. 
+insanely-fast-whisper  | 7.25       | (no output) 
+
+Full outputs: outputs/2026-05-05-115252-07-speaker-overlap-transcribe/

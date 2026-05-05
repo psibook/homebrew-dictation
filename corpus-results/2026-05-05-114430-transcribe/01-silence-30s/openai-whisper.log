@@ -1,0 +1,6 @@
+/Users/dev/.local/share/uv/tools/openai-whisper/lib/python3.13/site-packages/whisper/transcribe.py:132: UserWarning: FP16 is not supported on CPU; using FP32 instead
+  warnings.warn("FP16 is not supported on CPU; using FP32 instead")
+  0%|          | 0/3000 [00:00<?, ?frames/s]100%|██████████| 3000/3000 [00:07<00:00, 405.93frames/s]100%|██████████| 3000/3000 [00:07<00:00, 405.92frames/s]
+real 16.75
+user 43.34
+sys 7.69

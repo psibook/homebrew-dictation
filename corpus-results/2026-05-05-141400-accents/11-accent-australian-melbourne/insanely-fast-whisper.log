@@ -1,0 +1,343 @@
+/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/pyannote/audio/core/io.py:47: UserWarning: 
+torchcodec is not installed correctly so built-in audio decoding will fail. Solutions are:
+* use audio preloaded in-memory as a {'waveform': (channel, time) torch.Tensor, 'sample_rate': int} dictionary;
+* fix torchcodec installation. Error message was:
+
+Could not load libtorchcodec. Likely causes:
+          1. FFmpeg is not properly installed in your environment. We support
+             versions 4, 5, 6, 7, and 8, and we attempt to load libtorchcodec
+             for each of those versions. Errors for versions not installed on
+             your system are expected; only the error for your installed FFmpeg
+             version is relevant. On Windows, ensure you've installed the
+             "full-shared" version which ships DLLs.
+          2. The PyTorch version (2.10.0) is not compatible with
+             this version of TorchCodec. Refer to the version compatibility
+             table:
+             https://github.com/pytorch/torchcodec?tab=readme-ov-file#installing-torchcodec.
+          3. Another runtime dependency; see exceptions below.
+
+        The following exceptions were raised as we tried to load libtorchcodec:
+        
+[start of libtorchcodec loading traceback]
+FFmpeg version 8:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core8.dylib, 0x0006): Symbol not found: _torch_dtype_float4_e2m1fn_x2
+  Referenced from: <33EF1AB4-4518-3020-86A2-C3EAB298D43C> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core8.dylib
+  Expected in:     <50E40125-4FE2-3DD6-86CF-524D97AD323E> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/lib/libtorch_cpu.dylib
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core8.dylib
+
+FFmpeg version 7:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core7.dylib, 0x0006): Symbol not found: _torch_dtype_float4_e2m1fn_x2
+  Referenced from: <842B640E-BF4C-31D0-A9CC-DDA94E1C51F9> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core7.dylib
+  Expected in:     <50E40125-4FE2-3DD6-86CF-524D97AD323E> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/lib/libtorch_cpu.dylib
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core7.dylib
+
+FFmpeg version 6:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core6.dylib, 0x0006): Library not loaded: @rpath/libavutil.58.dylib
+  Referenced from: <800C1C39-D998-3928-A3E3-6422B2FDFC31> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core6.dylib
+  Reason: tried: '/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/libavutil.58.dylib' (no such file), '/opt/homebrew/opt/ffmpeg@7/lib/libavutil.58.dylib' (no such file), '/libavutil.58.dylib' (no such file)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core6.dylib
+
+FFmpeg version 5:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core5.dylib, 0x0006): Library not loaded: @rpath/libavutil.57.dylib
+  Referenced from: <4D0FCD51-5D58-3100-B240-7B72001BDEDE> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core5.dylib
+  Reason: tried: '/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/libavutil.57.dylib' (no such file), '/opt/homebrew/opt/ffmpeg@7/lib/libavutil.57.dylib' (no such file), '/libavutil.57.dylib' (no such file)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core5.dylib
+
+FFmpeg version 4:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core4.dylib, 0x0006): Library not loaded: @rpath/libavutil.56.dylib
+  Referenced from: <DA597FD3-7B15-3E5D-8DC9-D422CA10B9D5> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core4.dylib
+  Reason: tried: '/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/libavutil.56.dylib' (no such file), '/opt/homebrew/opt/ffmpeg@7/lib/libavutil.56.dylib' (no such file), '/libavutil.56.dylib' (no such file)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core4.dylib
+[end of libtorchcodec loading traceback].
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/1259 [00:00<?, ?it/s]Loading weights:  32%|███▏      | 403/1259 [00:00<00:00, 4028.03it/s]Loading weights: 100%|██████████| 1259/1259 [00:00<00:00, 7428.12it/s]
+[transformers] Using `chunk_length_s` is very experimental with seq2seq models. The results will not necessarily be entirely accurate and will have caveats. More information: https://github.com/huggingface/transformers/pull/20104. Ignore this warning with pipeline(..., ignore_warning=True). To use Whisper for long-form transcription, use rather the model's `generate` method directly as the model relies on it's own chunking mechanism (cf. Whisper original paper, section 3.8. Long-form Transcription).
+🤗 Transcribing... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0:00:00
+Traceback (most recent call last):
+  File "/Users/dev/.local/bin/insanely-fast-whisper", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/insanely_fast_whisper/cli.py", line 159, in main
+    outputs = pipe(
+        args.file_name,
+    ...<3 lines>...
+        return_timestamps=ts,
+    )
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/transformers/pipelines/automatic_speech_recognition.py", line 244, in __call__
+    return super().__call__(inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/transformers/pipelines/base.py", line 1256, in __call__
+    return next(
+        iter(
+    ...<3 lines>...
+        )
+    )
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/transformers/pipelines/pt_utils.py", line 126, in __next__
+    item = next(self.iterator)
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/transformers/pipelines/pt_utils.py", line 271, in __next__
+    processed = self.infer(next(self.iterator), **self.params)
+                           ~~~~^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/utils/data/dataloader.py", line 741, in __next__
+    data = self._next_data()
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/utils/data/dataloader.py", line 801, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/utils/data/_utils/fetch.py", line 35, in fetch
+    data.append(next(self.dataset_iter))
+                ~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/transformers/pipelines/pt_utils.py", line 188, in __next__
+    processed = next(self.subiterator)
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/transformers/pipelines/automatic_speech_recognition.py", line 365, in preprocess
+    import torchcodec
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/__init__.py", line 12, in <module>
+    from . import decoders, encoders, samplers, transforms  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/decoders/__init__.py", line 7, in <module>
+    from .._core import AudioStreamMetadata, VideoStreamMetadata
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_core/__init__.py", line 8, in <module>
+    from ._decoder_utils import create_audio_decoder, create_video_decoder
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_core/_decoder_utils.py", line 13, in <module>
+    from torchcodec._core._metadata import (
+    ...<3 lines>...
+    )
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_core/_metadata.py", line 15, in <module>
+    from torchcodec._core.ops import (
+    ...<3 lines>...
+    )
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_core/ops.py", line 38, in <module>
+    load_torchcodec_shared_libraries()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 111, in load_torchcodec_shared_libraries
+    raise RuntimeError(
+    ...<16 lines>...
+    )
+RuntimeError: Could not load libtorchcodec. Likely causes:
+          1. FFmpeg is not properly installed in your environment. We support
+             versions 4, 5, 6, 7, and 8, and we attempt to load libtorchcodec
+             for each of those versions. Errors for versions not installed on
+             your system are expected; only the error for your installed FFmpeg
+             version is relevant. On Windows, ensure you've installed the
+             "full-shared" version which ships DLLs.
+          2. The PyTorch version (2.10.0) is not compatible with
+             this version of TorchCodec. Refer to the version compatibility
+             table:
+             https://github.com/pytorch/torchcodec?tab=readme-ov-file#installing-torchcodec.
+          3. Another runtime dependency; see exceptions below.
+
+        The following exceptions were raised as we tried to load libtorchcodec:
+        
+[start of libtorchcodec loading traceback]
+FFmpeg version 8:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core8.dylib, 0x0006): Symbol not found: _torch_dtype_float4_e2m1fn_x2
+  Referenced from: <33EF1AB4-4518-3020-86A2-C3EAB298D43C> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core8.dylib
+  Expected in:     <50E40125-4FE2-3DD6-86CF-524D97AD323E> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/lib/libtorch_cpu.dylib
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core8.dylib
+
+FFmpeg version 7:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core7.dylib, 0x0006): Symbol not found: _torch_dtype_float4_e2m1fn_x2
+  Referenced from: <842B640E-BF4C-31D0-A9CC-DDA94E1C51F9> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core7.dylib
+  Expected in:     <50E40125-4FE2-3DD6-86CF-524D97AD323E> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/lib/libtorch_cpu.dylib
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core7.dylib
+
+FFmpeg version 6:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core6.dylib, 0x0006): Library not loaded: @rpath/libavutil.58.dylib
+  Referenced from: <800C1C39-D998-3928-A3E3-6422B2FDFC31> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core6.dylib
+  Reason: tried: '/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.58.dylib' (no such file), '/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/libavutil.58.dylib' (no such file), '/opt/homebrew/opt/ffmpeg@7/lib/libavutil.58.dylib' (no such file), '/libavutil.58.dylib' (no such file)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core6.dylib
+
+FFmpeg version 5:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core5.dylib, 0x0006): Library not loaded: @rpath/libavutil.57.dylib
+  Referenced from: <4D0FCD51-5D58-3100-B240-7B72001BDEDE> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core5.dylib
+  Reason: tried: '/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.57.dylib' (no such file), '/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/libavutil.57.dylib' (no such file), '/opt/homebrew/opt/ffmpeg@7/lib/libavutil.57.dylib' (no such file), '/libavutil.57.dylib' (no such file)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core5.dylib
+
+FFmpeg version 4:
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1442, in load_library
+    ctypes.CDLL(path)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 401, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core4.dylib, 0x0006): Library not loaded: @rpath/libavutil.56.dylib
+  Referenced from: <DA597FD3-7B15-3E5D-8DC9-D422CA10B9D5> /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core4.dylib
+  Reason: tried: '/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/ffmpeg/lib/libavutil.56.dylib' (no such file), '/Users/dev/.local/share/uv/python/cpython-3.13.12-macos-aarch64-none/lib/libavutil.56.dylib' (no such file), '/opt/homebrew/opt/ffmpeg@7/lib/libavutil.56.dylib' (no such file), '/libavutil.56.dylib' (no such file)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/_internally_replaced_utils.py", line 93, in load_torchcodec_shared_libraries
+    torch.ops.load_library(core_library_path)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torch/_ops.py", line 1444, in load_library
+    raise OSError(f"Could not load this library: {path}") from e
+OSError: Could not load this library: /Users/dev/.local/share/uv/tools/insanely-fast-whisper/lib/python3.13/site-packages/torchcodec/libtorchcodec_core4.dylib
+[end of libtorchcodec loading traceback].
+real 8.60
+user 3.97
+sys 1.82

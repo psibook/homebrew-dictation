@@ -1,0 +1,26 @@
+Input:  test-corpus/08-pink-noise-overlay.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-115435-08-pink-noise-overlay-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-115435-08-pink-noise-overlay-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 18.18      | Thank you. 
+mlx-whisper            | 2.74       | Thank you. 
+whisperx               | 25.88      | Yes, ma'am. 
+whisper-cpp            | 9.63       |  this 
+insanely-fast-whisper  | 7.25       | (no output) 
+
+Full outputs: outputs/2026-05-05-115435-08-pink-noise-overlay-transcribe/

@@ -1,0 +1,26 @@
+Input:  test-corpus/13-whispered-real.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-141704-13-whispered-real-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-141704-13-whispered-real-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 79.81      | Yeah, so that kind of sucks, but I'm still going to be making videos and I'm going to pull through whatever troubles I go through with my health. I wanted to just say hello to everyone. I wanted to sa 
+mlx-whisper            | 5.13       | Yeah, so that kind of sucks, but I'm still going to be making videos, and I'm going to pull through whatever troubles I go through with my health. I want it to just say hello to everyone. I want it to 
+whisperx               | 40.71      | Yeah, so that kind of sucks, but I'm still going to be making videos and I'm going to pull through whatever troubles I go through with my health. I wanted to just say hello to everyone. I wanted to sa 
+whisper-cpp            | 61.59      |  Yeah, so that kind of sucks, but I'm still going to be making videos and I'm going to  pull through whatever troubles I go through with my health. I want it to just say hello  to everyone. I want it  
+insanely-fast-whisper  | 7.94       | (no output) 
+
+Full outputs: outputs/2026-05-05-141704-13-whispered-real-transcribe/
