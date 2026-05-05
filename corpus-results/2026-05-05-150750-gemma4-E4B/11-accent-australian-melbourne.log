@@ -1,0 +1,18 @@
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files: 100%|██████████| 7/7 [00:00<00:00, 33981.63it/s]
+/Users/dev/.local/share/uv/tools/mlx-vlm/lib/python3.13/site-packages/transformers/audio_utils.py:549: UserWarning: At least one mel filter has all zero values. The value for `num_mel_filters` (128) may be set too high. Or, the value for `num_frequency_bins` (257) may be set too low.
+  warnings.warn(
+==========
+Files: ['test-corpus/11-accent-australian-melbourne.wav'] 
+
+Prompt: <bos><|turn>user
+Transcribe this audio.<|audio|><turn|>
+<|turn>model
+
+please call stella ask her to bring these things with her from the store six spuds of fresh snow peas five thick slabs of blue cheese and maybe a snack for her brother bob we also need a small plastic snake and a big toy frog for the kids she can scoop these things into three red bags and we will go meet her wednesday at the train station
+==========
+Prompt: 624 tokens, 232.832 tokens-per-sec
+Generation: 72 tokens, 28.849 tokens-per-sec
+Peak memory: 16.636 GB
+real 9.70
+user 3.83
+sys 5.77

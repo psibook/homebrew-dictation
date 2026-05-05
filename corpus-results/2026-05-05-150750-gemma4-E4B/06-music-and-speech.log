@@ -1,0 +1,18 @@
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files: 100%|██████████| 7/7 [00:00<00:00, 85349.21it/s]
+/Users/dev/.local/share/uv/tools/mlx-vlm/lib/python3.13/site-packages/transformers/audio_utils.py:549: UserWarning: At least one mel filter has all zero values. The value for `num_mel_filters` (128) may be set too high. Or, the value for `num_frequency_bins` (257) may be set too low.
+  warnings.warn(
+==========
+Files: ['test-corpus/06-music-and-speech.wav'] 
+
+Prompt: <bos><|turn>user
+Transcribe this audio.<|audio|><turn|>
+<|turn>model
+
+This front here is a quick voice memo. I want to try that with XLVM. Just going to see if it can be transcribed by Gemma and how that works.
+==========
+Prompt: 366 tokens, 115.671 tokens-per-sec
+Generation: 35 tokens, 23.103 tokens-per-sec
+Peak memory: 16.450 GB
+real 9.16
+user 3.34
+sys 5.12

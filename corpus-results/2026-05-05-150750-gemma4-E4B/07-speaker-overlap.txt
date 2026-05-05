@@ -1,0 +1,3 @@
+Files: ['test-corpus/07-speaker-overlap.wav'] 
+
+This front here is a quick voice memo this front here is i want to try that with Amlex i want to try that out with Amlex just going to see if it can be transcribed by Gemma and how that works

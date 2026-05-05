@@ -1,0 +1,18 @@
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files: 100%|██████████| 7/7 [00:00<00:00, 35035.95it/s]
+/Users/dev/.local/share/uv/tools/mlx-vlm/lib/python3.13/site-packages/transformers/audio_utils.py:549: UserWarning: At least one mel filter has all zero values. The value for `num_mel_filters` (128) may be set too high. Or, the value for `num_frequency_bins` (257) may be set too low.
+  warnings.warn(
+==========
+Files: ['test-corpus/07-speaker-overlap.wav'] 
+
+Prompt: <bos><|turn>user
+Transcribe this audio.<|audio|><turn|>
+<|turn>model
+
+This front here is a quick voice memo this front here is i want to try that with Amlex i want to try that out with Amlex just going to see if it can be transcribed by Gemma and how that works
+==========
+Prompt: 417 tokens, 125.460 tokens-per-sec
+Generation: 45 tokens, 26.719 tokens-per-sec
+Peak memory: 16.495 GB
+real 9.15
+user 3.27
+sys 5.12

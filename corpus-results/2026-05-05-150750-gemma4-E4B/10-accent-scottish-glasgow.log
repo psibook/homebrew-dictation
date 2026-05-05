@@ -1,0 +1,18 @@
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files: 100%|██████████| 7/7 [00:00<00:00, 199728.76it/s]
+/Users/dev/.local/share/uv/tools/mlx-vlm/lib/python3.13/site-packages/transformers/audio_utils.py:549: UserWarning: At least one mel filter has all zero values. The value for `num_mel_filters` (128) may be set too high. Or, the value for `num_frequency_bins` (257) may be set too low.
+  warnings.warn(
+==========
+Files: ['test-corpus/10-accent-scottish-glasgow.wav'] 
+
+Prompt: <bos><|turn>user
+Transcribe this audio.<|audio|><turn|>
+<|turn>model
+
+please call stella ask her to bring these things with her from the store six spoons of fresh snow peas five thick slabs of blue cheese and maybe a snack for her brother bob we also need a small plastic snake and a big toy frog for the kids she can scoop these things into three red bags and we'll go meet her on wednesday at the train station.
+==========
+Prompt: 546 tokens, 239.627 tokens-per-sec
+Generation: 75 tokens, 28.253 tokens-per-sec
+Peak memory: 16.590 GB
+real 9.26
+user 3.83
+sys 5.70

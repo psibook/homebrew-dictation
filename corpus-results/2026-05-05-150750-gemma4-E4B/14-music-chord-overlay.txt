@@ -1,0 +1,3 @@
+Files: ['test-corpus/14-music-chord-overlay.wav'] 
+
+This one here is a quick voice memo. I want to try it out with MLX VLM. Just going to see if it can be transcribed by Gemma and how that works.

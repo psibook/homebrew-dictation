@@ -232,12 +232,70 @@ Based on F6, F8, F12, F13:
 
 ---
 
+## Phase 2 — Gemma 4 E4B install + corpus comparison (2026-05-05)
+
+mlx-vlm 0.4.4 installed via `uv tool install mlx-vlm`. Issue #903 (audio gibberish in mlx-community quants) was closed via PR #931 and is fixed in 0.4.4 when using the **official** `google/gemma-4-*-it` models. No HuggingFace authentication required for download.
+
+Smoke-test on Simon Willison's `demo-audio-for-gemma.wav`: model loaded, transcribed, peak memory 16.4 GB (fits in 64 GB), generation 27 tok/s. **Reproduced Simon's documented "right → front" error** — same audio, same model, same mistake on this VM.
+
+Corpus run (14 inputs from Phase 1.5+1.6) completed in 2 min 30 s (warm cache, all 14 files). Outputs in `corpus-results/2026-05-05-150750-gemma4-E4B/SUMMARY.md`.
+
+### F17 — Gemma 4 E4B works on this VM
+mlx-vlm 0.4.4 + `google/gemma-4-E4B-it`, ~16 GB resident, ~27 tok/s. No auth required for the official model.
+
+### F18 — Simon Willison's "right → front" failure reproduced
+Same audio, same error documented in his April 12 2026 post. Persists across overlay variants (440 Hz, 3-tone chord, pseudo-whispered) — it's a learned acoustic confusion in the model, not a corruption artifact.
+
+### F19 — Gemma 4 silently fails on silence/short/noise rather than hallucinating
+Cases 01 (silence), 04 (600 ms), 08 (pink noise) → empty or near-empty output. **For pipelines that prefer "no output" over a wrong output, Gemma 4 is safer than 3 of 4 Whisper backends and equivalent to whisperX (VAD).**
+
+### F20 — Australian English: a THIRD distinct misperception of "spoons"
+- whisperX: "spoons" ✅
+- openai-whisper / mlx-whisper / whisper.cpp: "**spurns**"
+- Gemma 4 E4B: "**spuds**"
+Three SOTA-tier models, three different errors on the same input.
+
+### F21 — Gemma 4 hallucinates on real whispered speech
+Case 13: "troubles I go through" → "**psychotherapy**" — a full lexical hallucination on real ASMR-quality whispered audio that Whisper Large-v3 handles cleanly (only minor word errors). Gemma 4's training distribution evidently doesn't cover whispered phonation.
+
+### F22 — Gemma 4 routinely drops capitalisation and punctuation on accented English
+Cases 05 (JFK), 10 (Glasgow), 11 (Melbourne), 12 (Mumbai) all lost capitalisation / periods. More pervasive than the whisper-side normalisation divergence (F13).
+
+### Failure-mode count (4 Whisper backends + Gemma 4 E4B, 14 cases)
+
+| Model | ✅ Clean | 🟡 Drift | 🟠 Partial | 🔴 Hard fail |
+|---|---:|---:|---:|---:|
+| **whisperX** | **11** | 0 | 2 | 1 |
+| mlx-whisper | 6 | 2 | 3 | 3 |
+| whisper.cpp | 6 | 4 | 2 | 2 |
+| Gemma 4 E4B | 2 | 3 | 6 | 3 |
+| openai-whisper | 4 | 3 | 3 | 4 |
+
+Gemma 4 E4B sits between openai-whisper and whisper.cpp in raw-transcription quality; whisperX dominates the corpus.
+
+---
+
+## ADR-001b — Gemma variant (DRAFT, evidence locked)
+
+| Use case | Recommended |
+|---|---|
+| **Audio → text only** | **Whisper (whisperX preferred)** — Gemma 4 E4B is dominated on every transcription metric in our corpus. |
+| **Audio → reasoning over content** (summarise, classify, answer questions about what was said) | **Gemma 4 E4B** — Whisper can't do this. Alternative: two-stage Whisper → Gemma-4-text-only (no audio cost). |
+| **Unknown-content where false-positives are worse than silence** | Either **Gemma 4 E4B** or **whisperX**. Both produce empty output rather than canonical hallucinations on silence/noise. |
+
+Original brief framing ("can Gemma replace Whisper on this VM?") is answered **no** for raw transcription. Gemma 4's unique value is in combined-stack workflows that need reasoning over audio content.
+
+E2B not tested — smaller (~3 GB Q4), would likely be worse than E4B, marginal value low given E4B is already dominated for the primary purpose.
+
+---
+
 ## Open questions
 
-- ADR-001b: Gemma 4 E2B or E4B for Phase 2?
-- Phase 3 timing: when to formalise T2–T5 against all backends?
+- Two-stage stack design (Whisper → Gemma-4-text-only): worth a separate Phase 3 ADR if the Lieutenant has reasoning-over-audio use cases?
+- Phase 3 timing: when to formalise T2–T5 (resource bound, network policy, reboot survival) against all backends?
 - Should `insanely-fast-whisper` be removed from the install set or kept with the known-fail flag for revisit later?
 - Real music + vocals (e.g. podcast-with-music-bed) untested — out of scope for this corpus or worth a small follow-on?
+- E2B install: skip (low value), or run for completeness?
 
 ---
 

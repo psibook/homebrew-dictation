@@ -1,0 +1,4 @@
+Files: ['test-corpus/03-codec-degraded-roundtrip.wav'] 
+
+This right here is a quick voice memo. I want to try that with NLMNquicksec if it can be transcribed by Gemma and how that looks.
+

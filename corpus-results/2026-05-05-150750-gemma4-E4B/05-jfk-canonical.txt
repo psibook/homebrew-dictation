@@ -1,0 +1,3 @@
+Files: ['test-corpus/05-jfk-canonical.wav'] 
+
+and so my fellow americans ask not what your country can do for you ask what you can do for your country
