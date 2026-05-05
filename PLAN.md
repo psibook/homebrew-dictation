@@ -289,13 +289,41 @@ E2B not tested — smaller (~3 GB Q4), would likely be worse than E4B, marginal 
 
 ---
 
+## Phase 2.5 — Real music + speech ("podcast bed") (2026-05-05)
+
+Two new test cases (15, 16) using public-domain instrumental music from Wikimedia Commons (Beethoven piano sonata + Negaraku orchestral anthem) overlaid with Simon's speech at typical podcast levels.
+
+### F23 — Typical podcast bed does NOT break Whisper
+Beethoven piano at −12 dB below voice (standard ducked-bed level used in podcast production) handled cleanly by **all 4 Whisper backends** (case 15). Generalises the earlier 440 Hz tone (case 06) and 3-tone chord (case 14) results: rich harmonic instrumental content, when ducked, is not a Whisper failure mode. Gemma 4 still made errors (`right→front`, `transcribed→squared`).
+
+### F24 — Salience competition (music at near-equal level) IS the universal failure
+Orchestral anthem at −4 dB below voice (case 16) broke **all 5 backends**:
+- Whisper variants either **truncated** (lost everything after first sentence) or **hallucinated** (`It's good to see`).
+- Gemma 4 produced near-complete hallucination (`This might be like once manner is taking a voice. This could see.`). Notably, Gemma 4 did NOT silently-fail here as it did on pink noise (F19) — orchestral content is heard as competing speech, not as ignorable ambient.
+
+**Practical line:** music ducked ≥ 12 dB below voice = safe; music at near-equal level = ASR collapse. For media-production audio, pre-process with music attenuation or a vocal-isolation pass (Demucs / MDX-Net) before Whisper.
+
+### Updated failure-mode count (16 cases, 5 backends)
+
+| Backend | ✅ Clean | 🟡 Drift | 🟠 Partial | 🔴 Hard fail |
+|---|---:|---:|---:|---:|
+| **whisperX** | **12** | 0 | 2 | 2 |
+| mlx-whisper | 7 | 2 | 3 | 4 |
+| whisper.cpp | 6 | 4 | 2 | 4 |
+| Gemma 4 E4B | 2 | 3 | 7 | 4 |
+| openai-whisper | 5 | 3 | 3 | 5 |
+
+WhisperX still dominant. ADR-001a unchanged.
+
+---
+
 ## Open questions
 
-- Two-stage stack design (Whisper → Gemma-4-text-only): worth a separate Phase 3 ADR if the Lieutenant has reasoning-over-audio use cases?
+- Two-stage stack design (Whisper → Gemma-4-text-only) for reasoning-over-content: separate Phase 3 ADR if the Lieutenant has the use case?
 - Phase 3 timing: when to formalise T2–T5 (resource bound, network policy, reboot survival) against all backends?
+- Music pre-processing (Demucs / MDX-Net source separation) before Whisper for media audio: scope it as a follow-on contract?
 - Should `insanely-fast-whisper` be removed from the install set or kept with the known-fail flag for revisit later?
-- Real music + vocals (e.g. podcast-with-music-bed) untested — out of scope for this corpus or worth a small follow-on?
-- E2B install: skip (low value), or run for completeness?
+- E2B install: skip (low marginal value), or run for completeness?
 
 ---
 

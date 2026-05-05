@@ -1,0 +1,26 @@
+Input:  test-corpus/16-podcast-bed-orchestra.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-151907-16-podcast-bed-orchestra-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-151907-16-podcast-bed-orchestra-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 21.27      | This right here is a quick voice memo. 
+mlx-whisper            | 3.31       | This right here is a quick voice memo. 
+whisperx               | 28.31      | This right here is a quick voice memo. It's good to see. 
+whisper-cpp            | 11.18      |  this right here 
+insanely-fast-whisper  | 8.13       | (no output) 
+
+Full outputs: outputs/2026-05-05-151907-16-podcast-bed-orchestra-transcribe/

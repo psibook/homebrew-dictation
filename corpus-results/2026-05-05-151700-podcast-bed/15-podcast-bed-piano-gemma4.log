@@ -1,0 +1,18 @@
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files: 100%|██████████| 7/7 [00:00<00:00, 188205.95it/s]
+/Users/dev/.local/share/uv/tools/mlx-vlm/lib/python3.13/site-packages/transformers/audio_utils.py:549: UserWarning: At least one mel filter has all zero values. The value for `num_mel_filters` (128) may be set too high. Or, the value for `num_frequency_bins` (257) may be set too low.
+  warnings.warn(
+==========
+Files: ['test-corpus/15-podcast-bed-piano.wav'] 
+
+Prompt: <bos><|turn>user
+Transcribe this audio.<|audio|><turn|>
+<|turn>model
+
+This front here is a quick voice memo. I want to try it out with mlx vlm just going to see if it can be squared by gemma and how that works.
+==========
+Prompt: 366 tokens, 112.719 tokens-per-sec
+Generation: 38 tokens, 23.928 tokens-per-sec
+Peak memory: 16.391 GB
+real 10.59
+user 3.30
+sys 7.26

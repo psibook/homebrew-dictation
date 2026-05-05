@@ -1,0 +1,26 @@
+Input:  test-corpus/15-podcast-bed-piano.wav
+Task:   transcribe
+Lang:   en
+Output: outputs/2026-05-05-151720-15-podcast-bed-piano-transcribe
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  FAIL (exit 1) — see outputs/2026-05-05-151720-15-podcast-bed-piano-transcribe/insanely-fast-whisper.log
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 36.65      | This right here is a quick voice memo, I want to try it out with MLXVLM, just going to see if it can be transcribed by Gemma and how well that works. 
+mlx-whisper            | 5.06       | This right here is a quick voice memo I want to try it out with MLXVLM Just going to see if it can be transcribed by Gemma and how well that works 
+whisperx               | 32.58      | This right here is a quick voice memo I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisper-cpp            | 22.30      |  This right here is a quick voice memo. I want to try it out with MLXVLM.  Just going to see if it can be transcribed by Gemma and how well that works. 
+insanely-fast-whisper  | 10.50      | (no output) 
+
+Full outputs: outputs/2026-05-05-151720-15-podcast-bed-piano-transcribe/

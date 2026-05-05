@@ -1,0 +1,3 @@
+Files: ['test-corpus/15-podcast-bed-piano.wav'] 
+
+This front here is a quick voice memo. I want to try it out with mlx vlm just going to see if it can be squared by gemma and how that works.
