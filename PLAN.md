@@ -317,13 +317,51 @@ WhisperX still dominant. ADR-001a unchanged.
 
 ---
 
-## Open questions
+## Phase 3 — Two-stage Whisper → Gemma 26B-A4B reasoning pipeline (2026-05-05)
 
-- Two-stage stack design (Whisper → Gemma-4-text-only) for reasoning-over-content: separate Phase 3 ADR if the Lieutenant has the use case?
-- Phase 3 timing: when to formalise T2–T5 (resource bound, network policy, reboot survival) against all backends?
-- Music pre-processing (Demucs / MDX-Net source separation) before Whisper for media audio: scope it as a follow-on contract?
+Installed `unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit` — Unsloth's mixed-precision MLX-4bit quantisation, designed around Gemma 4's PLE / ScaledLinear sensitivity (the issue that breaks standard MLX-4bit per F-side research). Pulls ~16 GB. Runs at 25.9 tok/s with **16.2 GB peak memory** — essentially the same memory footprint as Gemma 4 E4B because the MoE architecture activates only ~3.8 B params per token despite the 26 B total parameter count.
+
+Two-stage pipeline (`tools/two-stage.sh`):
+1. **Stage 1 — Transcription:** whisperX (large-v3, faster-whisper backend, no align/diarise) produces the text.
+2. **Stage 2 — Reasoning:** Gemma 4 26B-A4B receives the transcript wrapped in a reasoning prompt and produces the answer.
+
+### F25 — Two-stage pipeline works on this VM
+mlx-vlm 0.4.4 + unsloth UD-MLX-4bit. Memory headroom comfortable (~16 GB peak each stage, but Whisper releases before Gemma loads — so peak is single-stage at any moment). Coherent, structured outputs that follow prompt templates (e.g. "summarise … then list one risk and one expected outcome" produced exactly that shape).
+
+### F26 — Two-stage OUTPERFORMS Gemma 4 E4B alone on the audio→reasoning task
+Direct comparison on the real-whispered ASMR clip (case 13):
+
+| Approach | Output |
+|---|---|
+| Gemma 4 E4B alone (Phase 2, F21) | hallucinated `troubles I go through` → `**psychotherapy**` — full lexical hallucination |
+| Two-stage Whisper→Gemma 26B-A4B | whisperX transcribed `troubles I go through` correctly; Gemma 26B-A4B then produced *"Resilient and cautiously optimistic (acknowledging difficulty while maintaining determination). Summary: The speaker is providing a brief update to reassure their audience that they will continue making videos despite ongoing health challenges."* |
+
+The two-stage stack:
+- Avoids Gemma 4 E4B's audio-side limitations (F18, F20, F21) by using Whisper for the audio.
+- Brings Gemma's reasoning capability (which Whisper cannot do) on top of clean text.
+- Costs ~16 GB peak memory at any one time (each stage runs sequentially, neither model is resident at the same time).
+- Latency: ~30–60 s for a 14–30 s clip (Whisper transcription 3–25 s + Gemma reasoning 5–15 s for short outputs).
+
+This **vindicates the audio→reasoning recommendation in ADR-001b** with empirical evidence on the Lieutenant's hardware.
+
+### ADR-001b — UPDATED with empirical Phase 3 evidence
+
+| Use case | Recommended | Notes |
+|---|---|---|
+| **Audio → text only** | **Whisper (whisperX preferred)** | Per ADR-001a |
+| **Audio → reasoning over content** | **Two-stage: whisperX → Gemma 4 26B-A4B (UD-MLX-4bit)** | Empirically beats Gemma 4 E4B alone (F26). Total ~16 GB peak, ~30–60 s latency. |
+| **Unknown content where false positives are worse than empties** | **whisperX** OR Gemma 4 E4B alone | Per F19; both produce empty rather than canonical hallucinations |
+
+E2B remains untested (low marginal value).
+
+---
+
+## Open questions (post Phase 3)
+
+- Phase 3 hardening (T2 repeat, T3 resource bound, T4 network policy, T5 reboot survival) against all backends — formalise when?
+- Music pre-processing (Demucs / MDX-Net source separation) before Whisper for media audio (the F24 failure mode) — scope as follow-on contract?
+- 31B-dense Gemma 4 (text-only, no audio) for harder reasoning tasks — install for completeness?
 - Should `insanely-fast-whisper` be removed from the install set or kept with the known-fail flag for revisit later?
-- E2B install: skip (low marginal value), or run for completeness?
 
 ---
 
