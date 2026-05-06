@@ -439,12 +439,13 @@ INSTALL.md updated to reflect this.
 
 ## Phase 5 — User-facing documentation + skill artifact (2026-05-06)
 
-Two artifacts authored to make the empirical findings reusable:
+Three artifacts authored to make the empirical findings reusable:
 
 - **`docs/USING-TRANSLATION.md`** — comprehensive user-facing how-to. TL;DR table (which tool for which task), quick-start commands for the four common scenarios, a backend-comparison cheat-sheet citing F-findings, failure-mode warning table, the two-stage pipeline usage, and a cost-zero ledger showing every component's open-source license.
 - **`skill/audio-translate/SKILL.md`** — skill artifact (Continental "skill" format with frontmatter) that teaches future Claude sessions how to handle any audio→text or audio→translation request. Contains the decision tree (English transcript / English target / non-English target / reasoning), the install one-liners, the failure-mode warnings, and the cost ledger.
+- **`docs/CONSUMER-REPORT.md`** — Consumer-Reports-style master score card across all 6 backends with Harvey-ball ratings (●◕◐◔○) on 15 criteria, plus task-keyed "best for…" / "avoid for…" lookups, a 5-second decision tree, and a free-cost reality check. The one-page version of the F1–F28 findings.
 
-Both artifacts derive from the F1–F28 evidence in this PLAN.md. The skill is workshop-stage (not yet deployed to `~/.claude/skills/` — that's a separate Skills-workshop concern).
+All three artifacts derive from the F1–F28 evidence in this PLAN.md. The skill is workshop-stage (not yet deployed to `~/.claude/skills/` — that's a separate Skills-workshop concern).
 
 ---
 

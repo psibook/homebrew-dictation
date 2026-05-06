@@ -200,6 +200,7 @@ The only thing the Lieutenant needs is:
 
 ## See also
 
+- **[`CONSUMER-REPORT.md`](CONSUMER-REPORT.md) — Consumer-Reports-style score card across all 6 backends with "best for / avoid for" lookups. Use this when you want the one-page comparison.**
 - [`INSTALL.md`](../INSTALL.md) — reproducible setup recipe
 - [`PLAN.md`](../PLAN.md) — full F1–F28 findings + ADR-001a/b
 - [`tools/whisper-compare.sh`](../tools/whisper-compare.sh) — side-by-side backend comparison harness
