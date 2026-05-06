@@ -435,8 +435,20 @@ INSTALL.md updated to reflect this.
 
 ---
 
-## Open questions (post Phase 4)
+## Phase 5 — User-facing documentation + skill artifact (2026-05-06)
 
+Two artifacts authored to make the empirical findings reusable:
+
+- **`docs/USING-TRANSLATION.md`** — comprehensive user-facing how-to. TL;DR table (which tool for which task), quick-start commands for the four common scenarios, a backend-comparison cheat-sheet citing F-findings, failure-mode warning table, the two-stage pipeline usage, and a cost-zero ledger showing every component's open-source license.
+- **`skill/audio-translate/SKILL.md`** — skill artifact (Continental "skill" format with frontmatter) that teaches future Claude sessions how to handle any audio→text or audio→translation request. Contains the decision tree (English transcript / English target / non-English target / reasoning), the install one-liners, the failure-mode warnings, and the cost ledger.
+
+Both artifacts derive from the F1–F28 evidence in this PLAN.md. The skill is workshop-stage (not yet deployed to `~/.claude/skills/` — that's a separate Skills-workshop concern).
+
+---
+
+## Open questions (post Phase 5)
+
+- Skill deployment: promote `skill/audio-translate/SKILL.md` to `~/.claude/skills/audio-translate/SKILL.md` (chmod 444) — Skills-workshop work, separate session?
 - Phase 3 hardening (T2 repeat, T3 resource bound, T4 network policy, T5 reboot survival) against all backends — formalise when?
 - Music pre-processing (Demucs / MDX-Net source separation) before Whisper for media audio (F24) — scope as follow-on contract?
 - 31B-dense Gemma 4 (text-only, no audio) for harder reasoning tasks — install for completeness?
