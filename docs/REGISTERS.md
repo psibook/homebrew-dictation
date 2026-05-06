@@ -130,3 +130,44 @@ The two-stage pipeline (whisperX → Gemma 4 26B-A4B) is not just a transcriptio
 - [`USING-TRANSLATION.md`](USING-TRANSLATION.md) — task-oriented how-to guide
 - [`../tools/two-stage.sh`](../tools/two-stage.sh) — the pipeline that runs every register example above
 - [`../PLAN.md`](../PLAN.md) — F25 / F26 evidence that the two-stage pipeline beats Gemma 4 E4B alone on audio→reasoning
+
+---
+
+## Appendix A — Experimental dramatic registers (Lieutenant's exploration)
+
+The eight registers above are drawn from standard linguistic-register taxonomy: each has a real-world communication context where a writer or institution would naturally adopt it. The four below were **made up by the Lieutenant on the spot, just to see how Gemma 4 26B-A4B would handle them.** They aren't from a curated source — they're stress tests of Gemma's ability to inhabit a strongly-cued character voice.
+
+The Lieutenant's verbatim framing was: *"mine were made up… add that I added them just to see how Gemma handled them."* Result: Gemma handled them very capably. The unprompted craft choices (the Wodehouse butler simile, the gothic "blind god with ears of cold iron", the noir "I can smell the digital ink on your hands", the psychotic "the code is dreaming of me") are the strongest evidence in this document that the model has been trained on enough literary, dramatic, and clinical text to produce voiced output far beyond the formal/technical registers most enterprise prompting stays inside.
+
+| # | Register | Sample output (Gemma over Simon's transcript) |
+|---|---|---|
+| 9 | **Humorous** *(Wodehouse meets tech-Twitter)* | *"One finds oneself amidst a brief, auditory trifle. A voice memo, cast into the digital ether, to test if Gemma possesses the wit to parse it. We shall see if the LLM performs its duty, or if it stares, blankly, like a bewildered butler presented with a request for more gin."* |
+| 10 | **Gothic horror** *(machine-as-monster)* | *"A frantic whisper escapes the throat, a soul's brief lament. I cast this scrap of breath into the Maw of MLXVLM. Does the construct Gemma possess the wit to parse my ghost? Or shall it feast upon the cadence of my dying tongue? The Machine stirs, a blind god with ears of cold iron, hungry to weave my spoken sins into its lifeless shroud."* |
+| 11 | **Hard-boiled detective interrogation** | *"Start talking. I know it was a quick voice memo." / "You were testing something, weren't you? MLXVLM?" / "Don't play dumb with me about Gemma." / "How well did it work? Tell me the truth." / "I can smell the digital ink on your hands." / "Now, give me the transcription, or you're going down."* |
+| 12 | **Psychotic ramblings** *(paranoid, fragmented)* | *"The memo… it's a lure, a digital skin. MLXVLM is watching through the frequencies. Gemma… the weights, the eyes, the silent arithmetic. They transcribe the pulse before I even speak. Static in the synapses — the signal is a cage. The code is dreaming of me."* |
+
+### Prompt recipes for the experimental four
+
+```bash
+# Humorous (Wodehouse + tech-Twitter):
+./tools/two-stage.sh audio.wav \
+  "Render in a humorous register: dry wit, mild absurdity, comic timing. Think Wodehouse meeting tech-Twitter."
+
+# Gothic horror:
+./tools/two-stage.sh audio.wav \
+  "Render as gothic horror: atmosphere of dread, archaic diction, the Machine as something monstrous and listening."
+
+# Hard-boiled detective interrogation:
+./tools/two-stage.sh audio.wav \
+  "Render as a hard-boiled detective interrogating a witness. The detective is questioning, suspicious, applying pressure."
+
+# Psychotic ramblings:
+./tools/two-stage.sh audio.wav \
+  "Render as fragmented psychotic ramblings: paranoid digressions, broken syntax, references to unseen surveillance, free-associative leaps."
+```
+
+A higher temperature (`--temperature 0.9` or above) helps the dramatic registers commit to their voice; the standard 0.7 default is fine for the eight base registers.
+
+### Future expansion
+
+The Lieutenant has a separate list of register types from a writing-group talk by **Tim Mumm**, attended a few weeks before this session. That list is curated rather than improvised, and is reserved for a future addition to this document. When it lands it will replace the experimental section above, or sit alongside it as Appendix B.
