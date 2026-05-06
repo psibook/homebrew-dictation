@@ -28,17 +28,17 @@ Routing chosen: option **(I)** — extend the contract rather than open a siblin
 - Metal probe initial signal: empty (`system_profiler SPDisplaysDataType` returned nothing).
 - Metal definitively confirmed at runtime in Phase 1 (whisper.cpp): `Apple Paravirtual device`, `MTL0 backend`.
 
-### Phase 1 — Whisper installs ✅ SUBSTANTIALLY COMPLETE
+### Phase 1 — Whisper installs ✅ COMPLETE
 
 **Goal:** install all 5 free Whisper distributions with `large-v3`-class models, smoke-test each, build a comparison harness so the Lieutenant can run failing-input tests.
 
-| # | Backend | Install | Smoke (translate) | Wall (warm) | Notes |
+| # | Backend | Install | Smoke | Wall (warm) | Notes |
 |---|---|---|---|---:|---|
 | 1 | **openai-whisper** (PyTorch) | ✅ | ✅ | 42.79 s | Reference; CPU only |
 | 2 | **mlx-whisper** (MLX/Metal) | ✅ | ✅ | **3.74 s** | Fastest warm; weights cached |
 | 3 | **whisperX** (faster-whisper + VAD) | ✅ | ✅ | 37.73 s | `--diarize` is a flag, not k=v |
 | 4 | **whisper.cpp** (C++ / GGML, Metal) | ✅ | ✅ | 22.76 s | Confirmed Metal under UTM |
-| 5 | **insanely-fast-whisper** (transformers) | ⚠️ Installed but doesn't run | ❌ | n/a | torchcodec/PyTorch ABI mismatch — see Finding F5 |
+| 5 | **insanely-fast-whisper** (transformers) | ✅ (after Phase 4 patches) | ✅ | ~22 s | Initial F5 fail RESOLVED in Phase 4 via torch 2.11 + rpath patch — see F27. Ranks 2nd in the corpus (8 ✅ / 4 🔴). |
 
 Comparison harness: `tools/whisper-compare.sh` runs all five against one input, captures wall time, dumps side-by-side outputs.
 
