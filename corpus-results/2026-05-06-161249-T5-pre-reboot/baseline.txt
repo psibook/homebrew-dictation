@@ -1,0 +1,33 @@
+# T5 Pre-Reboot Baseline
+
+Captured: 2026-05-06 16:12:49
+Hostname: devs-Virtual-Machine.local
+Uptime:   16:12  up 8 days,  8:51, 2 users, load averages: 1.72 2.94 2.95
+
+## Backend binaries
+
+  OK    /Users/dev/.local/bin/whisper  size=59  sha256=5b9696a30433ff6b...
+  OK    /Users/dev/.local/bin/mlx_whisper  size=60  sha256=bfffecbb3c720fdb...
+  OK    /Users/dev/.local/bin/whisperx  size=54  sha256=85da66f21b6a1564...
+  OK    /Users/dev/.local/bin/insanely-fast-whisper  size=80  sha256=694e4bf14a29f9bb...
+  OK    /Users/dev/.local/bin/mlx_vlm.generate  size=61  sha256=22d14d0eaa189c80...
+  OK    tools/whisper.cpp/build/bin/whisper-cli  size=826840  sha256=cfd8286851d7a355...
+
+## Model files
+
+  OK    tools/whisper.cpp/models/ggml-large-v3.bin  size=3095033483  sha256=64d182b440b98d52...
+
+## HuggingFace cache snapshots
+
+  models--Systran--faster-whisper-large-v3  ref=edaa852ec7e145841d8ffdb056a99866b5f0a478
+  models--google--gemma-4-E4B-it  ref=c53e9d33178b12afbad4a48334d21e19b8c29761
+  models--mlx-community--whisper-large-v3-mlx  ref=49e6aa286ad60c14352c404340ded53710378a11
+  models--openai--whisper-large-v3  ref=06f233fe06e710322aca913c1bc4249a0d71fce1
+  models--unsloth--gemma-4-26b-a4b-it-UD-MLX-4bit  ref=6b06e97d84a334c3ec934d61d4f5c80fb2b889d6
+
+## tests/smoke.sh outcome
+
+  exit: 0
+  log: corpus-results/2026-05-06-161249-T5-pre-reboot/smoke.log
+
+  Verdict: smoke 5/5 PASS — baseline is healthy.

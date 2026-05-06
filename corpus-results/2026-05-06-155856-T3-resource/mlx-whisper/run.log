@@ -1,0 +1,6 @@
+Args: {'audio': ['/Volumes/My Shared Files/receive-from-vm/demo-audio-for-gemma.wav'], 'model': 'mlx-community/whisper-large-v3-mlx', 'output_name': None, 'output_dir': 'corpus-results/2026-05-06-155856-T3-resource/mlx-whisper', 'output_format': 'txt', 'verbose': True, 'task': 'translate', 'language': None, 'temperature': 0, 'best_of': 5, 'patience': None, 'length_penalty': None, 'suppress_tokens': '-1', 'initial_prompt': None, 'condition_on_previous_text': True, 'fp16': True, 'compression_ratio_threshold': 2.4, 'logprob_threshold': -1.0, 'no_speech_threshold': 0.6, 'word_timestamps': False, 'prepend_punctuations': '"\'“¿([{-', 'append_punctuations': '"\'.。,，!！?？:：”)]}、', 'highlight_words': False, 'max_line_width': None, 'max_line_count': None, 'max_words_per_line': None, 'hallucination_silence_threshold': None, 'clip_timestamps': '0'}
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 148470.94it/s]
+Detecting language using up to the first 30 seconds. Use the `language` decoding option to specify the language
+Detected language: English
+[00:00.000 --> 00:07.000]  This right here is a quick voice memo. I want to try it out with MLXVLM.
+[00:07.000 --> 00:13.000]  Just going to see if it can be transcribed by Gemma and how well that works.

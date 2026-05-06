@@ -1,0 +1,35 @@
+>>> Running comparison harness...
+Input:  /Volumes/My Shared Files/receive-from-vm/demo-audio-for-gemma.wav
+Task:   translate
+Output: outputs/2026-05-06-161257-demo-audio-for-gemma-translate
+
+>>> openai-whisper
+  OK
+>>> mlx-whisper
+  OK
+>>> whisperx
+  OK
+>>> whisper-cpp
+  OK
+>>> insanely-fast-whisper
+  OK
+
+=================== SUMMARY ===================
+BACKEND                | WALL (s)   | FIRST 200 CHARS
+-----------------------+------------+-------------------------------------------------------------
+openai-whisper         | 40.48      | This right here is a quick voice memo. I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+mlx-whisper            | 4.24       | This right here is a quick voice memo. I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisperx               | 27.03      | This right here is a quick voice memo. I want to try it out with MLXVLM. Just going to see if it can be transcribed by Gemma and how well that works. 
+whisper-cpp            | 18.86      |  This right here is a quick voice memo. I want to try it out with MLXVLM, just going to see if it can be transcribed by Gemma and how well that works. 
+insanely-fast-whisper  | 29.64      |  This right here is a quick voice memo. I want to try it out with MLXVLM, just going to see if it can be transcribed by Gemma and how well that works. 
+
+Full outputs: outputs/2026-05-06-161257-demo-audio-for-gemma-translate/
+
+>>> Pass/fail per backend (latest run: outputs/2026-05-06-161257-demo-audio-for-gemma-translate)
+  PASS  openai-whisper
+  PASS  mlx-whisper
+  PASS  whisperx
+  PASS  whisper-cpp
+  PASS  insanely-fast-whisper
+
+  Summary: 5 pass, 0 fail (target: 5 pass)

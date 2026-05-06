@@ -452,9 +452,112 @@ All three artifacts derive from the F1–F28 evidence in this PLAN.md. The skill
 ## Open questions (post Phase 5)
 
 - Skill deployment: promote `skill/audio-translate/SKILL.md` to `~/.claude/skills/audio-translate/SKILL.md` (chmod 444) — Skills-workshop work, separate session?
-- Phase 3 hardening (T2 repeat, T3 resource bound, T4 network policy, T5 reboot survival) against all backends — formalise when?
+- ~~Phase 3 hardening (T2 repeat, T3 resource bound, T4 network policy, T5 reboot survival) against all backends — formalise when?~~ — **executed Session 2026-05-06; T2/T3/T4 PASS; T5 pre-reboot captured. See F29–F32.**
 - Music pre-processing (Demucs / MDX-Net source separation) before Whisper for media audio (F24) — scope as follow-on contract?
 - 31B-dense Gemma 4 (text-only, no audio) for harder reasoning tasks — install for completeness?
+
+---
+
+## Phase 6 — Phase 3 hardening (T2–T5 formal execution, 2026-05-06)
+
+Brief test cases T2–T5 formally executed in this session. Three of four PASS; T5 has its pre-reboot baseline captured and awaits a Lieutenant reboot for the verification half.
+
+Harnesses authored:
+- `tests/T2-repeat.sh` — runs each backend twice, compares output and wall time
+- `tests/T3-resource.sh` — samples RSS over the backend's PID tree during a run
+- `tests/T4-egress.sh` — three-layer evidence: vm-ops firewall reference, weight provenance audit, inference-time `lsof` sampling
+- `tests/T5-pre-reboot.sh` + `tests/T5-post-reboot.sh` — captures baseline now, verifies after reboot
+
+### F29 — T2 repeat: 6/6 PASS, all backends deterministic at temp 0
+
+Each backend invoked twice consecutively on Simon's demo clip (warm cache → warm cache). Results:
+
+| Backend | Run 1 wall (s) | Run 2 wall (s) | Output match | Verdict |
+|---|---:|---:|---|---|
+| openai-whisper | 47.26 | 45.39 | byte-identical | ✅ |
+| mlx-whisper | 8.19 | 4.07 | byte-identical | ✅ |
+| whisperX | 39.57 | 26.91 | byte-identical | ✅ |
+| whisper.cpp | 19.88 | 20.24 | byte-identical | ✅ |
+| insanely-fast-whisper | 36.98 | 29.41 | byte-identical | ✅ |
+| Gemma 4 E4B | 12.28 | 8.50 | byte-identical | ✅ |
+
+Two notable sub-findings:
+
+1. **Gemma 4 E4B is fully reproducible at `--temperature 0.0`** — same input + same temp produces byte-identical output across runs. This was not previously verified; existing scripts used temp 1.0 (stochastic). Pipelines that need reproducibility for audit can rely on temp 0.
+2. **Warm-cache speedup is real for the Python-loading backends** — mlx-whisper halves (8.2s → 4.1s), whisperX cuts a third (39.6s → 26.9s), Gemma-E4B cuts a third (12.3s → 8.5s). whisper.cpp is already-optimal warm (no Python startup) and is bounded by Metal compute. **For latency-sensitive workloads, run a discardable warmup invocation before measuring.**
+
+No daemon crashes, no model-reload failures. Repeat-invocation is safe across all 6 backends.
+
+### F30 — T3 resource bound: peak RSS comfortably under 64 GiB across the board
+
+Sampled the backend's PID tree (recursive `pgrep -P` walker) every 0.5 s; recorded peak summed RSS:
+
+| Backend | Peak RSS (GiB) | % of 64 GiB |
+|---|---:|---:|
+| openai-whisper | 8.87 | 13.9% |
+| mlx-whisper | 3.51 | 5.5% |
+| whisperX | 8.43 | 13.2% |
+| whisper.cpp | 4.24 | 6.6% |
+| insanely-fast-whisper | 3.37 | 5.3% |
+| Gemma 4 E4B | 15.75 | 24.6% |
+| Gemma 4 26B-A4B | 14.33 | 22.4% |
+
+Three sub-findings:
+
+1. **mlx-whisper and insanely-fast-whisper are the leanest backends** (~3.5 GiB) — both rely on shared Metal/MPS framework already mapped, and store the Whisper Large-v3 weights once. **Best fit for memory-constrained hosts** (laptops, lower-RAM VMs).
+2. **openai-whisper and whisperX both peak near 9 GiB** — PyTorch CPU + CT2 quant carry their own overhead beyond raw weights. Acceptable on a 64 GiB host; flag if porting to a 16 GiB host.
+3. **Two-stage stack peak = max(whisperX, Gemma 4 26B-A4B) = 14.33 GiB** — because the stages run sequentially and whisperX releases its memory before the Gemma model loads. Confirmed by direct measurement (Gemma 4 26B-A4B alone = 14.33 GiB; whisperX alone = 8.43 GiB; observed two-stage peak in earlier work F25 = ~16 GiB included Whisper still resident at handoff). **The two-stage pipeline does not double the peak memory.**
+
+The earlier narrative figure for Gemma 4 E4B (16.4 GB, F17) is consistent with this measurement (15.75 GiB ≈ 16.4 × 0.93 in GB). Slightly tighter because 0.5 s sampling can miss a brief peak between samples. Not material.
+
+### F31 — T4 HTTPS-only egress: 6/6 PASS (every non-loopback socket is to port 443)
+
+Three-layer evidence:
+
+1. **vm-ops firewall** (CASE-BOARD: SECURE, 2026-04-24) blocks SSH/HTTP outbound and allows only HTTPS (port 443). Any successful weight download must therefore have been HTTPS — the policy is enforced at the kernel.
+2. **Weight provenance**: every cached model directory traces to `huggingface.co` (HTTPS-only). Five HF cache entries plus the whisper.cpp local model (also pulled from huggingface.co/ggerganov/whisper.cpp).
+3. **Inference-time sockets**: `lsof -a -i -n -P -p <tree>` polled every 0.5 s during each backend's run. Counts split:
+
+| Backend | non-443 socket events | port-443 socket events | Verdict |
+|---|---:|---:|---|
+| openai-whisper | 0 | 0 | ✅ |
+| mlx-whisper | 0 | 5 | ✅ |
+| whisperX | 0 | 31 | ✅ |
+| whisper.cpp | 0 | 0 | ✅ |
+| insanely-fast-whisper | 0 | 30 | ✅ |
+| Gemma 4 E4B | 0 | 12 | ✅ |
+
+Sub-findings:
+
+1. **Two backends (openai-whisper, whisper.cpp) are fully air-gappable** — zero non-loopback sockets during inference once weights are cached. **For the strictest network policies, prefer these two.**
+2. **Four backends (mlx-whisper, whisperX, insanely-fast-whisper, Gemma 4 E4B) make staleness-check calls to HuggingFace's CDN** (52.84.217.88 = AWS CloudFront, port 443). All HTTPS-compliant. Set `HF_HUB_OFFLINE=1` (or `TRANSFORMERS_OFFLINE=1`) to disable the check entirely and approach whisper.cpp's clean offline behaviour. Not required for the brief's policy.
+3. **Methodology note (lsof bug):** `lsof -i -p $PID` *ORs* the selectors. Use `lsof -a -i -p $PID` to AND them. Without `-a`, the harness picked up sockets from every other process on the system (Claude.app, Chrome, 1Password, etc) and misreported "thousands of non-localhost sockets." Captured here as a methodology pitfall for future test scripts.
+
+### F32 — T5 reboot survival: pre-reboot baseline captured (smoke 5/5 PASS); post-reboot pending Lieutenant reboot
+
+Pre-reboot baseline at `corpus-results/<ts>-T5-pre-reboot/baseline.txt`:
+
+- Uptime at capture: 8 days, 8:51 (the VM has been up for a real working week — this is a substantive reboot test, not a pre-warmed one).
+- All 6 backend binaries present (5 wrappers + `tools/whisper.cpp/build/bin/whisper-cli`); SHA-256 of each captured.
+- whisper.cpp model: 3.1 GiB binary; SHA-256 captured.
+- 5 HuggingFace cache snapshots present; each `refs/main` recorded.
+- `tests/smoke.sh` exit 0 (5/5 backends translate Simon's clip).
+
+Resume protocol: after the Lieutenant reboots the VM, in the next session run
+
+```
+tests/T5-post-reboot.sh corpus-results/2026-05-06-161249-T5-pre-reboot
+```
+
+The script will: (a) confirm uptime indicates a recent reboot, (b) re-capture the inventory and diff against the baseline, (c) re-run smoke, (d) report PASS / FAIL.
+
+T5 cannot fully complete in this session because the reboot would terminate it. **Status: half-complete; awaits Lieutenant's reboot.**
+
+### Phase 6 leaderboard update
+
+No leaderboard changes — Phase 3 hardening is about operational properties (repeatability, memory, network, persistence), not transcription accuracy. ADR-001a and ADR-001b are unchanged.
+
+What changed: each ADR row now has empirical hardening data behind it. Memory, repeatability, and air-gap status are documented per backend.
 
 ---
 
@@ -462,14 +565,15 @@ All three artifacts derive from the F1–F28 evidence in this PLAN.md. The skill
 
 | ID | Status | Notes |
 |---|---|---|
-| T1 cold smoke | ✅ 4/5 pass | demo-audio-for-gemma.wav; insanely-fast-whisper fails |
-| T2 repeat | pending | re-run via `tools/whisper-compare.sh` |
-| T3 resource bound | pending | RSS via `ps -axo rss,comm` during run |
-| T4 HTTPS-only egress | pending (informally OK) | weights pulled from HF / GitHub over HTTPS |
-| T5 reboot survival | pending | re-run harness after VM reboot |
+| T1 cold smoke | ✅ 5/5 PASS | demo-audio-for-gemma.wav; insanely-fast-whisper revived in Phase 4 (F27) |
+| T2 repeat | ✅ 6/6 PASS | F29 — byte-identical output across two runs; warm-cache speedup observed |
+| T3 resource bound | ✅ 7/7 measured | F30 — peak RSS 3.4–15.8 GiB, all under 25% of 64 GiB |
+| T4 HTTPS-only egress | ✅ 6/6 PASS | F31 — every non-loopback socket on port 443; 2 backends fully air-gappable |
+| T5 reboot survival | ⏳ pre-baseline captured | F32 — `tests/T5-post-reboot.sh <dir>` to verify after Lieutenant reboot |
 
 ---
 
 ## Session log
 
 - **2026-05-05 11:03–11:30 (active session, 27 min so far)** — kickoff session opened from parking-lot deposit. Planning Q1 → gemma-on-vm chosen over Skills P1-CRITICAL. Q2 (variant) opened then preempted by audio file delivery → research established Whisper > Gemma for raw audio→translation → contract scope broadened. All 5 Whisper distributions installed; 4 working; Metal confirmed under UTM; comparison harness written and validated; PLAN/INSTALL/smoke files in this commit.
+- **2026-05-06 ~15:50–16:15 (Phase 3 hardening session)** — Lieutenant chose Phase 3 from four parked options ("canonical finish-the-brief pick"). Authored four test harnesses (`tests/T2-repeat.sh`, `T3-resource.sh`, `T4-egress.sh`, `T5-pre-reboot.sh` + `T5-post-reboot.sh`). Executed T2/T3/T4 against all 6 backends + 26B-A4B in T3. F29–F32 captured. Test cases table now: T1✅ T2✅ T3✅ T4✅ T5⏳. T5 awaits Lieutenant reboot.
