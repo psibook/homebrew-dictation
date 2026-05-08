@@ -82,14 +82,35 @@ if [ "$UNINSTALL" -eq 1 ]; then
   exit 0
 fi
 
+# ----- Helper: ffmpeg@7 lib dir (Apple Silicon = /opt/homebrew/...,    ----
+# -----                            Intel        = /usr/local/...)        ---
+ffmpeg7_lib_dir() {
+  local prefix
+  prefix="$(brew --prefix ffmpeg@7 2>/dev/null || true)"
+  if [ -z "$prefix" ]; then
+    echo "  IFW patch: brew --prefix ffmpeg@7 returned empty — is ffmpeg@7 installed?" >&2
+    return 1
+  fi
+  echo "$prefix/lib"
+}
+
 # ----- Helper: locate insanely-fast-whisper's torchcodec dir -------------
+# Uses a python3.* glob so the patch survives uv's default Python rolling
+# from 3.13 → 3.14 → ... without code edits.
 ifw_torchcodec_dir() {
-  # uv tool dir; respects UV_TOOL_DIR if set, otherwise default.
   local tool_dir
   tool_dir="$("$UV" tool dir 2>/dev/null || true)"
   if [ -z "$tool_dir" ]; then
     tool_dir="${UV_TOOL_DIR:-$HOME/.local/share/uv/tools}"
   fi
+  # Glob expansion picks the actual python3.x dir uv chose.
+  local hit
+  for hit in "$tool_dir"/insanely-fast-whisper/lib/python3.*/site-packages/torchcodec; do
+    [ -d "$hit" ] && { echo "$hit"; return 0; }
+  done
+  # Fallback to the literal PYVER path (matches what was there before this
+  # script grew the glob). Returns a non-existent path; caller tests with
+  # `[ ! -f $dylib ]` and reports "SKIP".
   echo "$tool_dir/insanely-fast-whisper/lib/python${PYVER}/site-packages/torchcodec"
 }
 
@@ -97,6 +118,7 @@ ifw_torchcodec_dir() {
 apply_ifw_patch() {
   local dir; dir="$(ifw_torchcodec_dir)"
   local dylib="$dir/libtorchcodec_core7.dylib"
+  local ffmpeg7_lib; ffmpeg7_lib="$(ffmpeg7_lib_dir)" || return 1
 
   if [ ! -f "$dylib" ]; then
     echo "  IFW patch: SKIP (libtorchcodec_core7.dylib not found at $dylib)" >&2
@@ -105,14 +127,14 @@ apply_ifw_patch() {
   fi
 
   # Check if rpath is already in place; if so, this is a re-run with no work.
-  if otool -l "$dylib" 2>/dev/null | grep -q "/opt/homebrew/opt/ffmpeg@7/lib"; then
-    echo "  IFW patch: ALREADY APPLIED (rpath /opt/homebrew/opt/ffmpeg@7/lib present)"
+  if otool -l "$dylib" 2>/dev/null | grep -q "$ffmpeg7_lib"; then
+    echo "  IFW patch: ALREADY APPLIED (rpath $ffmpeg7_lib present)"
     return 0
   fi
 
   # Add rpath. install_name_tool will refuse if the rpath is already present;
   # ignore the error in that case (defensive).
-  if ! install_name_tool -add_rpath /opt/homebrew/opt/ffmpeg@7/lib "$dylib" 2>/dev/null; then
+  if ! install_name_tool -add_rpath "$ffmpeg7_lib" "$dylib" 2>/dev/null; then
     echo "  IFW patch: install_name_tool -add_rpath failed (rpath may already exist)" >&2
   fi
 
@@ -123,8 +145,8 @@ apply_ifw_patch() {
   fi
 
   # Verify by reading back the load commands.
-  if otool -l "$dylib" 2>/dev/null | grep -q "/opt/homebrew/opt/ffmpeg@7/lib"; then
-    echo "  IFW patch: APPLIED (rpath added + ad-hoc resigned)"
+  if otool -l "$dylib" 2>/dev/null | grep -q "$ffmpeg7_lib"; then
+    echo "  IFW patch: APPLIED (rpath $ffmpeg7_lib added + ad-hoc resigned)"
     return 0
   else
     echo "  IFW patch: VERIFY FAILED — rpath not present after install_name_tool" >&2

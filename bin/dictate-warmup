@@ -147,8 +147,12 @@ warm_whisper_cpp() {
 warm_ifw() {
   local bin; bin="$(locate insanely-fast-whisper)"; [ -z "$bin" ] && return 1
   local out; out="$(mktemp -d)"; trap "rm -rf $out" RETURN
+  # Resolve ffmpeg@7 lib via brew --prefix so this works on both
+  # Apple Silicon (/opt/homebrew/...) and Intel (/usr/local/...) hosts.
+  local ffmpeg7_lib
+  ffmpeg7_lib="$(brew --prefix ffmpeg@7 2>/dev/null)/lib"
   echo "  pulling insanely-fast-whisper weights (~3 GB transformers cache)..."
-  DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/opt/ffmpeg@7/lib \
+  DYLD_FALLBACK_LIBRARY_PATH="$ffmpeg7_lib" \
     "$bin" --file-name "$INPUT_WAV" \
       --model-name openai/whisper-large-v3 \
       --task translate --device-id mps \
