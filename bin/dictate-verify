@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+# dictate-verify — proves the dictation-stack tap was installed correctly
+# by reproducing the byte-stable whisperX transcript on a known input.
+#
+# Reference (PLAN.md F29): whisperX is byte-deterministic at the default
+# temperature; the bundled expected hash was reproduced across 4 independent
+# runs (T2-repeat, T3-resource, T4-egress) on the gemma-on-vm VM.
+#
+# Exit codes:
+#   0 — PASS (transcript matches expected hash, or with --lenient: contains
+#             required tokens).
+#   1 — FAIL (mismatch, missing whisperx, missing fixtures, or any error).
+
+set -uo pipefail
+
+usage() {
+  cat <<USAGE
+Usage: dictate-verify [--lenient] [--keep-output] [-v]
+
+Reproduces the F29 byte-stable whisperX transcript on the bundled
+demo-audio-for-gemma.wav fixture and verifies output integrity.
+
+Options:
+  --lenient        Accept substring-presence match (the smoke.sh standard
+                   from the gemma-on-vm contract: output must contain
+                   "voice memo", an MLXVLM-shaped token, and "Gemma").
+                   Use after upgrading whisperX, when version drift can
+                   change segmentation while preserving content.
+  --keep-output    Don't delete the temporary output directory on exit.
+  -v               Verbose — show whisperx invocation and timings.
+  -h, --help       Show this message.
+
+Reference: PLAN.md F29 in psibook/gemma-on-vm.
+USAGE
+}
+
+LENIENT=0
+KEEP=0
+VERBOSE=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --lenient)     LENIENT=1; shift ;;
+    --keep-output) KEEP=1; shift ;;
+    -v|--verbose)  VERBOSE=1; shift ;;
+    -h|--help)     usage; exit 0 ;;
+    *)             echo "dictate-verify: unknown option: $1" >&2; usage >&2; exit 1 ;;
+  esac
+done
+
+# ----- Locate fixture directory ------------------------------------------
+# Prefer brew --prefix; fall back to /opt/homebrew (Apple Silicon default)
+# and /usr/local (Intel default).
+fixture_dir=""
+for candidate in \
+  "$(brew --prefix dictation-stack 2>/dev/null || true)/share/dictation-stack" \
+  "$(brew --prefix 2>/dev/null || true)/share/dictation-stack" \
+  "/opt/homebrew/share/dictation-stack" \
+  "/usr/local/share/dictation-stack"
+do
+  [ -n "$candidate" ] || continue
+  if [ -f "$candidate/demo-audio-for-gemma.wav" ]; then
+    fixture_dir="$candidate"
+    break
+  fi
+done
+
+if [ -z "$fixture_dir" ]; then
+  echo "dictate-verify: FAIL — could not locate dictation-stack share directory." >&2
+  echo "                Tried: \$(brew --prefix dictation-stack)/share/dictation-stack," >&2
+  echo "                       \$(brew --prefix)/share/dictation-stack," >&2
+  echo "                       /opt/homebrew/share/dictation-stack," >&2
+  echo "                       /usr/local/share/dictation-stack" >&2
+  echo "                Is the tap installed?  brew install psibook/dictation/dictation-stack" >&2
+  exit 1
+fi
+
+INPUT_WAV="$fixture_dir/demo-audio-for-gemma.wav"
+INPUT_HASH_FILE="$fixture_dir/demo-audio-for-gemma.input.sha256"
+EXPECTED_TXT="$fixture_dir/demo-audio-for-gemma.expected.txt"
+EXPECTED_HASH_FILE="$fixture_dir/demo-audio-for-gemma.expected.sha256"
+
+for f in "$INPUT_WAV" "$INPUT_HASH_FILE" "$EXPECTED_TXT" "$EXPECTED_HASH_FILE"; do
+  if [ ! -f "$f" ]; then
+    echo "dictate-verify: FAIL — fixture missing: $f" >&2
+    exit 1
+  fi
+done
+
+# ----- Locate whisperx ---------------------------------------------------
+# uv tool installs put binaries in ~/.local/bin by default. Fall back to
+# the user's home if not on PATH (a common situation right after
+# dictate-stack-install completes but before the user reopens their shell).
+WHISPERX="$(command -v whisperx 2>/dev/null || true)"
+if [ -z "$WHISPERX" ]; then
+  if [ -x "$HOME/.local/bin/whisperx" ]; then
+    WHISPERX="$HOME/.local/bin/whisperx"
+  fi
+fi
+if [ -z "$WHISPERX" ] || [ ! -x "$WHISPERX" ]; then
+  echo "dictate-verify: FAIL — whisperx not found." >&2
+  echo "                Run \`dictate-stack-install\` to install the Python tools." >&2
+  exit 1
+fi
+
+# ----- 1. Verify input audio integrity -----------------------------------
+expected_input_hash="$(awk '{print $1}' "$INPUT_HASH_FILE")"
+actual_input_hash="$(shasum -a 256 "$INPUT_WAV" | awk '{print $1}')"
+if [ "$actual_input_hash" != "$expected_input_hash" ]; then
+  echo "dictate-verify: FAIL — input audio hash mismatch (fixture corrupted)." >&2
+  echo "                expected: $expected_input_hash" >&2
+  echo "                actual:   $actual_input_hash" >&2
+  exit 1
+fi
+echo "[1/3] input audio SHA-256 verified: $expected_input_hash"
+
+# ----- 2. Run whisperX ---------------------------------------------------
+TMPOUT="$(mktemp -d -t dictate-verify-XXXXXX)"
+cleanup() {
+  if [ "$KEEP" -eq 0 ]; then
+    rm -rf "$TMPOUT"
+  else
+    echo "Output kept at: $TMPOUT"
+  fi
+}
+trap cleanup EXIT
+
+if [ "$VERBOSE" -eq 1 ]; then
+  echo "[2/3] whisperx $INPUT_WAV --model large-v3 --task translate --output_format txt --no_align --compute_type float32"
+else
+  echo "[2/3] running whisperx (this is the slow step — first run also pulls ~3 GB of weights)..."
+fi
+
+t0="$(date +%s)"
+if ! "$WHISPERX" "$INPUT_WAV" \
+  --model large-v3 --task translate \
+  --output_dir "$TMPOUT" --output_format txt \
+  --no_align --compute_type float32 \
+  >"$TMPOUT/whisperx.log" 2>&1
+then
+  echo "dictate-verify: FAIL — whisperx exited non-zero." >&2
+  echo "                log tail:" >&2
+  tail -20 "$TMPOUT/whisperx.log" | sed 's/^/                  /' >&2
+  exit 1
+fi
+t1="$(date +%s)"
+[ "$VERBOSE" -eq 1 ] && echo "      whisperx wall: $((t1-t0)) s"
+
+OUTPUT_TXT="$(ls "$TMPOUT"/*.txt 2>/dev/null | head -1)"
+if [ -z "$OUTPUT_TXT" ] || [ ! -s "$OUTPUT_TXT" ]; then
+  echo "dictate-verify: FAIL — whisperx produced no output txt." >&2
+  exit 1
+fi
+
+# ----- 3. Compare against expected ---------------------------------------
+expected_output_hash="$(awk '{print $1}' "$EXPECTED_HASH_FILE")"
+actual_output_hash="$(shasum -a 256 "$OUTPUT_TXT" | awk '{print $1}')"
+
+if [ "$actual_output_hash" = "$expected_output_hash" ]; then
+  echo "[3/3] transcript SHA-256 matches expected (strict): $expected_output_hash"
+  echo
+  echo "dictate-verify: PASS"
+  exit 0
+fi
+
+# Strict failed.
+echo "[3/3] transcript SHA-256 mismatch (strict failed)"
+echo "      expected: $expected_output_hash"
+echo "      actual:   $actual_output_hash"
+echo
+echo "      diff (expected vs actual):"
+diff -u "$EXPECTED_TXT" "$OUTPUT_TXT" 2>/dev/null | sed 's/^/        /' | head -40
+
+if [ "$LENIENT" -eq 1 ]; then
+  if grep -qi "voice memo" "$OUTPUT_TXT" \
+    && grep -Eqi "MLXVLM|MLSVLM|NLXVLM" "$OUTPUT_TXT" \
+    && grep -qi "Gemma" "$OUTPUT_TXT"; then
+    echo
+    echo "      lenient check: required tokens present (voice memo / MLXVLM-like / Gemma)"
+    echo
+    echo "dictate-verify: PASS (lenient — strict hash drifted, content correct)"
+    exit 0
+  fi
+  echo "      lenient check: required tokens missing"
+fi
+
+echo
+echo "dictate-verify: FAIL"
+echo "  Hint: re-run with --lenient if a whisperx upgrade may have changed segmentation."
+echo "        If lenient also fails, the transcription content itself diverged."
+exit 1

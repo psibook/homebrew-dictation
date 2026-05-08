@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+# dictate-warmup — pre-pull all model weights so the first user-facing
+# invocation isn't bottlenecked on a 25 GB HuggingFace download.
+#
+# Runs each backend once on the bundled demo fixture. Subsequent
+# invocations of any backend will hit warm caches.
+#
+# This is OPTIONAL. `dictate-verify` works on a cold install (whisperX
+# downloads its ~3 GB weights on first run automatically). Run this only
+# if you want all five backends + Gemma 4 ready to go without per-backend
+# first-run latency.
+#
+# Disk footprint (cumulative, across HuggingFace + openai-whisper caches):
+#   ~25 GB.
+#
+# Exit codes:
+#   0 — every requested backend succeeded.
+#   1 — any backend failed.
+
+set -uo pipefail
+
+usage() {
+  cat <<USAGE
+Usage: dictate-warmup [--whisper-only] [BACKEND...]
+
+Pre-pulls model weights by running each backend once on the bundled
+demo audio fixture (\$HOMEBREW_PREFIX/share/dictation-stack/demo-audio-for-gemma.wav).
+
+Options:
+  --whisper-only   Skip Gemma 4 (saves ~16 GB; warms only the 5 Whisper backends).
+  -h, --help       Show this message.
+
+Backends (defaults to all six):
+  openai-whisper, mlx-whisper, whisperx, whisper-cpp,
+  insanely-fast-whisper, gemma-e4b
+USAGE
+}
+
+WHISPER_ONLY=0
+BACKENDS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --whisper-only) WHISPER_ONLY=1; shift ;;
+    -h|--help)      usage; exit 0 ;;
+    -*)             echo "dictate-warmup: unknown option: $1" >&2; usage >&2; exit 1 ;;
+    *)              BACKENDS+=("$1"); shift ;;
+  esac
+done
+
+if [ "${#BACKENDS[@]}" -eq 0 ]; then
+  if [ "$WHISPER_ONLY" -eq 1 ]; then
+    BACKENDS=(openai-whisper mlx-whisper whisperx whisper-cpp insanely-fast-whisper)
+  else
+    BACKENDS=(openai-whisper mlx-whisper whisperx whisper-cpp insanely-fast-whisper gemma-e4b)
+  fi
+fi
+
+# ----- Locate fixture and binaries ---------------------------------------
+fixture_dir=""
+for candidate in \
+  "$(brew --prefix dictation-stack 2>/dev/null || true)/share/dictation-stack" \
+  "$(brew --prefix 2>/dev/null || true)/share/dictation-stack" \
+  "/opt/homebrew/share/dictation-stack" \
+  "/usr/local/share/dictation-stack"
+do
+  [ -n "$candidate" ] || continue
+  if [ -f "$candidate/demo-audio-for-gemma.wav" ]; then
+    fixture_dir="$candidate"
+    break
+  fi
+done
+
+if [ -z "$fixture_dir" ]; then
+  echo "dictate-warmup: FAIL — could not locate dictation-stack share directory." >&2
+  echo "                Is the tap installed?  brew install psibook/dictation/dictation-stack" >&2
+  exit 1
+fi
+
+INPUT_WAV="$fixture_dir/demo-audio-for-gemma.wav"
+HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || echo /opt/homebrew)"
+
+# Resolve binaries — uv tool installs land in ~/.local/bin
+locate() {
+  local name="$1"
+  if [ -x "$HOME/.local/bin/$name" ]; then
+    echo "$HOME/.local/bin/$name"
+  else
+    command -v "$name" 2>/dev/null
+  fi
+}
+
+WHISPER_CPP_BIN="$HOMEBREW_PREFIX/bin/whisper-cli"
+WHISPER_CPP_MODEL_DIR="$HOME/.cache/whisper.cpp"
+
+# ----- Per-backend warmup runners ----------------------------------------
+warm_openai_whisper() {
+  local bin; bin="$(locate whisper)"; [ -z "$bin" ] && return 1
+  local out; out="$(mktemp -d)"; trap "rm -rf $out" RETURN
+  echo "  pulling openai-whisper large-v3 weights (~2.9 GB)..."
+  "$bin" "$INPUT_WAV" --model large-v3 --task translate \
+    --output_dir "$out" --output_format txt --verbose False >/dev/null 2>&1
+}
+
+warm_mlx_whisper() {
+  local bin; bin="$(locate mlx_whisper)"; [ -z "$bin" ] && return 1
+  local out; out="$(mktemp -d)"; trap "rm -rf $out" RETURN
+  echo "  pulling mlx-whisper large-v3-mlx weights (~3 GB)..."
+  "$bin" "$INPUT_WAV" --model mlx-community/whisper-large-v3-mlx \
+    --task translate --output-dir "$out" --output-format txt >/dev/null 2>&1
+}
+
+warm_whisperx() {
+  local bin; bin="$(locate whisperx)"; [ -z "$bin" ] && return 1
+  local out; out="$(mktemp -d)"; trap "rm -rf $out" RETURN
+  echo "  pulling whisperx (faster-whisper-large-v3) weights (~3 GB)..."
+  "$bin" "$INPUT_WAV" --model large-v3 --task translate \
+    --output_dir "$out" --output_format txt \
+    --no_align --compute_type float32 >/dev/null 2>&1
+}
+
+warm_whisper_cpp() {
+  if [ ! -x "$WHISPER_CPP_BIN" ]; then
+    echo "  whisper-cli not at $WHISPER_CPP_BIN — is the formula installed?" >&2
+    return 1
+  fi
+  mkdir -p "$WHISPER_CPP_MODEL_DIR"
+  local model="$WHISPER_CPP_MODEL_DIR/ggml-large-v3.bin"
+  if [ ! -f "$model" ]; then
+    echo "  pulling whisper.cpp ggml-large-v3 weights (~3.1 GB)..."
+    if command -v curl >/dev/null 2>&1; then
+      curl -L --fail \
+        -o "$model" \
+        https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin \
+        || { rm -f "$model"; return 1; }
+    else
+      echo "  curl missing; cannot pull whisper.cpp model." >&2
+      return 1
+    fi
+  fi
+  local out; out="$(mktemp -d)"; trap "rm -rf $out" RETURN
+  ffmpeg -y -i "$INPUT_WAV" -ar 16000 -ac 1 -f wav "$out/input-16k.wav" \
+    >/dev/null 2>&1
+  "$WHISPER_CPP_BIN" -f "$out/input-16k.wav" -m "$model" \
+    --translate -of "$out/output" -otxt >/dev/null 2>&1
+}
+
+warm_ifw() {
+  local bin; bin="$(locate insanely-fast-whisper)"; [ -z "$bin" ] && return 1
+  local out; out="$(mktemp -d)"; trap "rm -rf $out" RETURN
+  echo "  pulling insanely-fast-whisper weights (~3 GB transformers cache)..."
+  DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/opt/ffmpeg@7/lib \
+    "$bin" --file-name "$INPUT_WAV" \
+      --model-name openai/whisper-large-v3 \
+      --task translate --device-id mps \
+      --transcript-path "$out/output.json" >/dev/null 2>&1
+}
+
+warm_gemma_e4b() {
+  local bin; bin="$(locate mlx_vlm.generate)"; [ -z "$bin" ] && return 1
+  echo "  pulling Gemma 4 E4B weights (~16 GB) — this is the long one..."
+  "$bin" --model google/gemma-4-E4B-it \
+    --audio "$INPUT_WAV" \
+    --prompt "Transcribe this audio." \
+    --max-tokens 50 --temperature 0.0 >/dev/null 2>&1
+}
+
+# ----- Drive --------------------------------------------------------------
+echo "dictate-warmup: pre-pulling weights for ${#BACKENDS[@]} backend(s)"
+echo "                disk needed: ~25 GB total (HF cache + openai-whisper cache + whisper.cpp model)"
+echo
+
+failed=()
+for bk in "${BACKENDS[@]}"; do
+  echo ">>> $bk"
+  case "$bk" in
+    openai-whisper)        warm_openai_whisper        ;;
+    mlx-whisper)           warm_mlx_whisper           ;;
+    whisperx)              warm_whisperx              ;;
+    whisper-cpp)           warm_whisper_cpp           ;;
+    insanely-fast-whisper) warm_ifw                   ;;
+    gemma-e4b)             warm_gemma_e4b             ;;
+    *) echo "    unknown backend: $bk" >&2; failed+=("$bk"); continue ;;
+  esac
+  if [ $? -eq 0 ]; then
+    echo "    OK"
+  else
+    echo "    FAIL" >&2
+    failed+=("$bk")
+  fi
+done
+
+echo
+if [ "${#failed[@]}" -eq 0 ]; then
+  echo "dictate-warmup: PASS — all ${#BACKENDS[@]} backend(s) warmed."
+  exit 0
+fi
+echo "dictate-warmup: FAIL on: ${failed[*]}"
+exit 1

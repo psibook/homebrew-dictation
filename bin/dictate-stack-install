@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+# dictate-stack-install — install (or repair) the user-scope Python tools
+# in the dictation stack: openai-whisper, mlx-whisper, whisperx,
+# insanely-fast-whisper (with the F5/F27 patches), and mlx-vlm.
+#
+# Called automatically from `def post_install` during `brew install
+# psibook/dictation/dictation-stack`. Also safe to re-run by hand:
+#   - after `uv tool upgrade insanely-fast-whisper` (which wipes the
+#     rpath patch — see PLAN.md F27 install-recipe note)
+#   - to repair a partially-failed initial install
+#   - to upgrade just one tool via `dictate-stack-install <tool>`
+#
+# Exit codes:
+#   0 — all requested tools installed (or already at-version) and IFW
+#       patches verified.
+#   1 — any uv/install/patch step failed.
+
+set -uo pipefail
+
+PYVER="3.13"
+
+usage() {
+  cat <<USAGE
+Usage: dictate-stack-install [--patch-only] [--uninstall] [TOOL...]
+
+Installs the user-scope Python tools that make up the dictation stack,
+applies the IFW torchcodec rpath patch (PLAN.md F5/F27), and verifies.
+
+Options:
+  --patch-only     Skip uv tool installs; only re-apply the IFW patches
+                   (use after \`uv tool upgrade insanely-fast-whisper\`).
+  --uninstall      Remove the user-scope tools (does not remove brew
+                   formula or the system deps it pulled in).
+  -h, --help       Show this message.
+
+Tools (defaults to all five):
+  openai-whisper, mlx-whisper, whisperx, insanely-fast-whisper, mlx-vlm
+USAGE
+}
+
+UV="$(command -v uv 2>/dev/null || true)"
+if [ -z "$UV" ]; then
+  for candidate in /opt/homebrew/bin/uv /usr/local/bin/uv "$HOME/.local/bin/uv"; do
+    [ -x "$candidate" ] && { UV="$candidate"; break; }
+  done
+fi
+if [ -z "$UV" ] || [ ! -x "$UV" ]; then
+  echo "dictate-stack-install: FAIL — uv not found." >&2
+  echo "                       brew install uv  # or  curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
+  exit 1
+fi
+
+PATCH_ONLY=0
+UNINSTALL=0
+TOOLS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --patch-only) PATCH_ONLY=1; shift ;;
+    --uninstall)  UNINSTALL=1; shift ;;
+    -h|--help)    usage; exit 0 ;;
+    -*)           echo "dictate-stack-install: unknown option: $1" >&2; usage >&2; exit 1 ;;
+    *)            TOOLS+=("$1"); shift ;;
+  esac
+done
+
+if [ "${#TOOLS[@]}" -eq 0 ]; then
+  TOOLS=(openai-whisper mlx-whisper whisperx insanely-fast-whisper mlx-vlm)
+fi
+
+# ----- Uninstall path ----------------------------------------------------
+if [ "$UNINSTALL" -eq 1 ]; then
+  echo "Uninstalling user-scope tools: ${TOOLS[*]}"
+  for t in "${TOOLS[@]}"; do
+    "$UV" tool uninstall "$t" || echo "  (note: $t was not installed)"
+  done
+  echo
+  echo "dictate-stack-install: uninstall complete."
+  echo "  Note: HuggingFace cache (~/.cache/huggingface/) and openai-whisper cache"
+  echo "  (~/.cache/whisper/) hold ~10+ GB of model weights and were not removed."
+  echo "  Remove manually if desired:"
+  echo "    rm -rf ~/.cache/huggingface ~/.cache/whisper"
+  exit 0
+fi
+
+# ----- Helper: locate insanely-fast-whisper's torchcodec dir -------------
+ifw_torchcodec_dir() {
+  # uv tool dir; respects UV_TOOL_DIR if set, otherwise default.
+  local tool_dir
+  tool_dir="$("$UV" tool dir 2>/dev/null || true)"
+  if [ -z "$tool_dir" ]; then
+    tool_dir="${UV_TOOL_DIR:-$HOME/.local/share/uv/tools}"
+  fi
+  echo "$tool_dir/insanely-fast-whisper/lib/python${PYVER}/site-packages/torchcodec"
+}
+
+# ----- IFW patch: rpath + ad-hoc resign ----------------------------------
+apply_ifw_patch() {
+  local dir; dir="$(ifw_torchcodec_dir)"
+  local dylib="$dir/libtorchcodec_core7.dylib"
+
+  if [ ! -f "$dylib" ]; then
+    echo "  IFW patch: SKIP (libtorchcodec_core7.dylib not found at $dylib)" >&2
+    echo "             insanely-fast-whisper may not be installed." >&2
+    return 1
+  fi
+
+  # Check if rpath is already in place; if so, this is a re-run with no work.
+  if otool -l "$dylib" 2>/dev/null | grep -q "/opt/homebrew/opt/ffmpeg@7/lib"; then
+    echo "  IFW patch: ALREADY APPLIED (rpath /opt/homebrew/opt/ffmpeg@7/lib present)"
+    return 0
+  fi
+
+  # Add rpath. install_name_tool will refuse if the rpath is already present;
+  # ignore the error in that case (defensive).
+  if ! install_name_tool -add_rpath /opt/homebrew/opt/ffmpeg@7/lib "$dylib" 2>/dev/null; then
+    echo "  IFW patch: install_name_tool -add_rpath failed (rpath may already exist)" >&2
+  fi
+
+  # Re-sign with ad-hoc signature.
+  if ! codesign --force --sign - "$dylib" 2>/dev/null; then
+    echo "  IFW patch: codesign --force --sign - failed" >&2
+    return 1
+  fi
+
+  # Verify by reading back the load commands.
+  if otool -l "$dylib" 2>/dev/null | grep -q "/opt/homebrew/opt/ffmpeg@7/lib"; then
+    echo "  IFW patch: APPLIED (rpath added + ad-hoc resigned)"
+    return 0
+  else
+    echo "  IFW patch: VERIFY FAILED — rpath not present after install_name_tool" >&2
+    return 1
+  fi
+}
+
+# ----- Patch-only path ---------------------------------------------------
+if [ "$PATCH_ONLY" -eq 1 ]; then
+  echo "Applying IFW patches only (skipping uv tool installs)..."
+  if apply_ifw_patch; then
+    echo
+    echo "dictate-stack-install: patch-only complete."
+    exit 0
+  else
+    echo
+    echo "dictate-stack-install: patch-only FAILED."
+    exit 1
+  fi
+fi
+
+# ----- Install path ------------------------------------------------------
+overall_rc=0
+
+for t in "${TOOLS[@]}"; do
+  echo ">>> $t"
+  case "$t" in
+    insanely-fast-whisper)
+      # Force torch >= 2.11 (PLAN F5/F27 — for the
+      # _torch_dtype_float4_e2m1fn_x2 symbol that torchcodec needs).
+      if ! "$UV" tool install --python "$PYVER" --reinstall \
+            --with "torch>=2.11" insanely-fast-whisper; then
+        echo "    FAIL: uv tool install insanely-fast-whisper" >&2
+        overall_rc=1
+        continue
+      fi
+      # Apply the rpath/codesign patch (PLAN F3, F5, F27).
+      if ! apply_ifw_patch; then
+        overall_rc=1
+      fi
+      ;;
+    *)
+      if ! "$UV" tool install --python "$PYVER" "$t"; then
+        echo "    FAIL: uv tool install $t" >&2
+        overall_rc=1
+      fi
+      ;;
+  esac
+done
+
+echo
+if [ "$overall_rc" -eq 0 ]; then
+  echo "dictate-stack-install: complete."
+  echo "  Tools installed: ${TOOLS[*]}"
+  echo "  Verify: dictate-verify"
+  echo
+  echo "  Note: ~/.local/bin must be on your PATH. Most shells already include it;"
+  echo "        if dictate-verify reports 'whisperx not found', run:"
+  echo "          export PATH=\"\$HOME/.local/bin:\$PATH\""
+  echo "        and add that line to ~/.zshrc or ~/.bashrc."
+  exit 0
+else
+  echo "dictate-stack-install: one or more steps FAILED — see lines above."
+  exit 1
+fi
