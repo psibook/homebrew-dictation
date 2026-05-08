@@ -17,11 +17,12 @@ clobber at worst).
 - ~30 GB free disk (the formula itself is small; the model-weight downloads
   on first run are the bulk).
 
-## The three-command verification
+## The four-command verification
 
 ```bash
 brew tap psibook/dictation
 brew install dictation-stack
+dictate-stack-install                 # one-time, user-scope Python tools install
 dictate-verify
 ```
 
@@ -30,33 +31,88 @@ Expected outcomes:
 | Step | What happens | Wall time (rough) |
 |---|---|---|
 | `brew tap psibook/dictation` | clones github.com/psibook/homebrew-dictation into `$(brew --repository)/Library/Taps/psibook/homebrew-dictation/` | <30 s |
-| `brew install dictation-stack` | pulls deps, builds whisper.cpp v1.8.4 from source, installs scripts + fixtures, runs `dictate-stack-install` in `def post_install` (which `uv tool install`s 5 Python tools and applies the IFW rpath/codesign patch) | 5–15 min — torchcodec + transformers + faster-whisper are heavy uv installs |
+| `brew install dictation-stack` | pulls deps, builds whisper.cpp v1.8.4 from source, installs scripts + fixtures into the brew prefix. **Does not** install the Python tools (sandbox-blocked) — the caveats tell you so. | 1–5 min |
+| `dictate-stack-install` | runs in your shell (no brew sandbox): `uv tool install`s 5 Python tools, pins `torch>=2.11` for IFW, applies the torchcodec rpath patch, ad-hoc codesigns the dylib | 5–15 min — torchcodec + transformers + faster-whisper are heavy uv installs |
 | `dictate-verify` | verifies bundled audio SHA, runs whisperX, compares transcript SHA against the F29 byte-stable reference | 30 s on a warm cache; **first run pulls ~3 GB of whisperX weights from huggingface.co — expect 1–5 min depending on bandwidth** |
 
 PASS criterion (per the contract): **`dictate-verify` exits 0.**
 
-## What to do if `dictate-verify` reports FAIL
+## Why four commands instead of three
 
-### "FAIL — input audio hash mismatch"
+Homebrew's install sandbox forbids writes to `~/.cache/uv/` and
+`~/.local/share/uv/tools/`. `uv tool install` writes there. So
+`def post_install` cannot run `uv tool install` reliably — it
+silently fails on stricter macOS configurations (Tier 2 hosts) with
+`Operation not permitted (os error 1)`. The fix: split user-scope
+work out of `brew install` and require an explicit
+`dictate-stack-install` step that runs without the sandbox.
+
+ADR-002 (`decisions/ADR-002-tap-structure.md`) records the original
+"atomic install" design, the empirical sandbox-blocked failure on
+`gww@mbp23`, and the design change to the four-command flow.
+
+## What to do if any step fails
+
+### `brew install dictation-stack` fails
+
+Most likely a Homebrew dep issue. Run:
+
+```bash
+brew doctor
+brew update
+brew install dictation-stack
+```
+
+If the failure is on `cmake -B build` (whisper.cpp source build), you
+may need to update Command Line Tools:
+
+```bash
+sudo rm -rf /Library/Developer/CommandLineTools
+sudo xcode-select --install
+```
+
+### `dictate-stack-install` fails
+
+Re-run it; `uv tool install` is idempotent. If a single tool's install
+fails repeatedly, install just that one for diagnostics:
+
+```bash
+dictate-stack-install whisperx
+```
+
+If the IFW patch step fails specifically:
+
+```bash
+dictate-stack-install --patch-only
+```
+
+### `dictate-verify` reports "FAIL — whisperx not found"
+
+`dictate-stack-install` either didn't run or it ran but `~/.local/bin`
+isn't on your PATH. Check both:
+
+```bash
+which whisperx                       # should print ~/.local/bin/whisperx
+ls -la ~/.local/bin/whisperx         # should be executable
+
+# If missing, run:
+dictate-stack-install
+
+# If present but not on PATH:
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+dictate-verify
+```
+
+### `dictate-verify` reports "FAIL — input audio hash mismatch"
 
 The `demo-audio-for-gemma.wav` fixture in `$(brew --prefix)/share/dictation-stack/`
-doesn't match the recorded SHA-256. This means either the tap was tampered
-with after upload or `bin/dictate-verify` and the WAV got out of sync. Re-tap:
+doesn't match the recorded SHA-256. Re-tap:
 
 ```bash
 brew untap psibook/dictation
 brew tap psibook/dictation
 brew reinstall dictation-stack
-```
-
-### "FAIL — whisperx not found"
-
-`uv tool install` succeeded but `~/.local/bin` isn't on PATH. Add it:
-
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-dictate-verify
 ```
 
 ### "FAIL — whisperx exited non-zero"

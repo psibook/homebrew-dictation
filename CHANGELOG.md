@@ -8,6 +8,33 @@ relative to the `dictation-stack` formula's `version` field.
 
 ## [Unreleased]
 
+### Changed (BREAKING — install flow now requires one extra command)
+- **Removed `def post_install` from the formula.** The original
+  0.1.0 design had `def post_install` invoke `dictate-stack-install`,
+  which `uv tool install`s the five Python tools. That writes to
+  `~/.cache/uv/` and `~/.local/share/uv/tools/` — both outside the
+  Homebrew prefix. **Empirical confirmation on a Tier 2 macOS host
+  (`gww@mbp23`, 2026-05-08) that the brew install sandbox returns
+  `Operation not permitted (os error 1)` for those writes.** All five
+  `uv tool install` calls failed identically; whisperX was never
+  installed; T1–T5 then correctly reported "whisperx not found".
+- New install flow is **four commands**, not three:
+  ```
+  brew tap psibook/dictation
+  brew install dictation-stack
+  dictate-stack-install            # NEW: explicit user step
+  dictate-verify
+  ```
+  `dictate-stack-install` runs in the user's shell, outside the brew
+  sandbox, where the user-scope writes are permitted as designed.
+- ADR-002 gained a postscript dated 2026-05-08 documenting the
+  observed failure, the decision change, and what is and isn't
+  preserved by it.
+- README Quick Start, the "Install — what each command actually
+  does" section, the formula's `caveats` block, and
+  `HANDOFF-TO-HOST.md` are all updated to reflect the four-command
+  flow and to explain *why* it's four rather than three.
+
 ### Fixed
 - Formula's `def install` no longer trips `Errno::EPERM @ apply2files`
   on stricter macOS configurations (Tier 2 hosts). Root cause:
@@ -19,6 +46,11 @@ relative to the `dictation-stack` formula's `version` field.
   first, then `bin.install Dir["stage_bin/*"]`. Homebrew now operates
   only on staged files it owns. Failure originally observed on
   `gww@mbp23` (Tier 2 macOS); retest required.
+- `host-tests/T2-repeat.sh`, `T3-resource.sh`, and `T4-offline.sh` now
+  use the shared `require_tool whisperx locate_whisperx` helper rather
+  than a generic `log_fail "whisperx not found"`. The helper prints
+  actionable next-step instructions (`dictate-stack-install`, the
+  PATH check, the README link) when a user-scope tool is missing.
 
 ### Added
 - Six-test host-side test suite under `host-tests/`:

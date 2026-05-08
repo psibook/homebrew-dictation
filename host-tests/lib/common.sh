@@ -87,8 +87,23 @@ require_tool() {
     echo "$found"
     return 0
   fi
-  log_fail "$name not found — is psibook/dictation/dictation-stack installed?"
-  log_fail "  brew tap psibook/dictation && brew install dictation-stack"
+  log_fail "$name not found"
+  case "$name" in
+    whisperx|whisper|mlx_whisper|insanely-fast-whisper|mlx_vlm.generate)
+      log_fail "  This is a user-scope Python tool (uv tool install)."
+      log_fail "  If you ran \`brew install dictation-stack\`, the next required step is:"
+      log_fail "    dictate-stack-install"
+      log_fail "  See: https://github.com/psibook/homebrew-dictation#install"
+      ;;
+    whisper-cli)
+      log_fail "  This is built from source by \`brew install dictation-stack\`."
+      log_fail "    brew tap psibook/dictation && brew install dictation-stack"
+      ;;
+    *)
+      log_fail "  Run: brew tap psibook/dictation && brew install dictation-stack"
+      log_fail "       dictate-stack-install"
+      ;;
+  esac
   return 1
 }
 

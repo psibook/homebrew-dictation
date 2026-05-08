@@ -134,3 +134,77 @@ The decision today does not foreclose that path.
 - BRIEF.md (this branch's prompt)
 - This tap's `Formula/dictation-stack.rb` (implementation)
 - This tap's `bin/dictate-verify` (the F29-grounded verification check)
+
+---
+
+## Postscript — 2026-05-08, design change
+
+The "Negative Consequences" section above flagged
+> **Homebrew convention violation: writing to user-scope dirs.**
+> A standard Homebrew formula installs only into `HOMEBREW_PREFIX`.
+> This formula's `def post_install` writes into
+> `~/.local/share/uv/tools/` (uv tool dir).
+
+Empirical evidence on a Tier 2 macOS host (`gww@mbp23`, 2026-05-08)
+confirmed this is **not just unconventional — it is actually
+prohibited** by Homebrew's install sandbox. `uv tool install` failed
+with:
+
+```
+error: Failed to initialize cache at `/Users/gww/.cache/uv`
+  Caused by: failed to open file `/Users/gww/.cache/uv/sdists-v9/.git`:
+  Operation not permitted (os error 1)
+```
+
+Five `uv tool install` calls failed identically. Cause: the brew
+sandbox grants writes only to the formula's prefix (and the build's
+staging dir during `def install`). `~/.cache/uv/` and
+`~/.local/share/uv/tools/` are outside that allow-list, so any
+syscall that opens a file there for write returns EPERM.
+
+### Decision change
+
+Remove `system bin/"dictate-stack-install"` from `def post_install`.
+The formula's responsibility ends at installing the prefix-scope bits
+(scripts, fixtures, host-tests/, the source-built `whisper-cli`).
+The user-scope `uv tool install` work moves to an explicit user step:
+
+```
+brew tap psibook/dictation
+brew install dictation-stack       # was: did everything (and failed)
+dictate-stack-install              # NEW: user runs this in their shell
+dictate-verify
+```
+
+Run from the user's shell, `dictate-stack-install` operates without
+the brew sandbox and the original install logic is unchanged.
+
+### What this preserves
+
+- Empirical guarantee atomicity (Reason 1 in the original decision)
+  is unaffected — `dictate-stack-install` still installs all five
+  Python tools as a coherent unit.
+- The IFW rpath patch (the other reason for the post_install hook)
+  still runs, just one command later.
+- Per-tool flexibility is still NOT offered (per the original
+  Reason 4, "Reversibility — adding per-tool formulas later is
+  mechanical").
+
+### What it costs
+
+- A four-command Quick Start instead of three. Documented prominently
+  in `README.md`, in `HANDOFF-TO-HOST.md`, and in the formula's
+  `caveats` block (which Homebrew prints right after `brew install`).
+- A second-pass error mode: if the user reads only the README's
+  Quick Start and skips the caveats, `dictate-verify` will fail with
+  "whisperx not found" rather than just working. The error message
+  in `bin/dictate-verify` already directs the user to
+  `dictate-stack-install`, so recovery is one command away.
+
+### Status
+
+- 2026-05-08: Original failure observed on `gww@mbp23`.
+- 2026-05-08: Design change applied; `def post_install` removed,
+  caveats rewritten, README and HANDOFF-TO-HOST updated, this
+  postscript added. CHANGELOG entry under [Unreleased].
+- Retest pending on `gww@mbp23`.

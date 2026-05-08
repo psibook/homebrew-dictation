@@ -12,10 +12,19 @@ verification script and a six-test host-side suite.
 ```bash
 brew tap psibook/dictation
 brew install dictation-stack
-dictate-verify     # must exit 0
+dictate-stack-install            # one-time user-scope install of Python tools
+dictate-verify                   # must exit 0
 ```
 
-That's it. After `dictate-verify` reports PASS, you have:
+Why four commands instead of three: Homebrew's install sandbox blocks
+writes to `~/.cache/uv/` and `~/.local/share/uv/tools/` (i.e. anything
+the user runs `uv tool install` against), so the tap cannot do that
+work inside `def post_install`. `dictate-stack-install` is run by you,
+in your normal shell, and the sandbox doesn't apply. See the
+[ADR-002 postscript](decisions/ADR-002-tap-structure.md) for the
+empirical reason.
+
+After `dictate-verify` reports PASS, you have:
 
 - **`whisper-cli`** — Metal-accelerated whisper.cpp v1.8.4
 - **`whisperx`** — VAD-pre-filtered, accent-robust transcription (the recommended default)
@@ -67,14 +76,17 @@ A more elaborate version of this table — Consumer-Reports-style with
 Harvey balls and 15 criteria — lives in the source contract's
 [`docs/CONSUMER-REPORT.md`](docs/CONSUMER-REPORT.md).
 
-## Install — what `brew install` actually does
+## Install — what each command actually does
 
-```
-brew tap psibook/dictation
-brew install dictation-stack
-```
+### `brew tap psibook/dictation`
 
-Behind the scenes:
+Clones the tap repository to
+`$(brew --repository)/Library/Taps/psibook/homebrew-dictation/`. Wall
+time: <30 seconds.
+
+### `brew install dictation-stack`
+
+Runs inside Homebrew's install sandbox. Does only what the sandbox allows:
 
 1. Pulls `cmake`, `ffmpeg`, `ffmpeg@7`, `uv` from Homebrew core.
 2. Downloads whisper.cpp v1.8.4 source tarball (SHA-256 pinned).
@@ -85,16 +97,33 @@ Behind the scenes:
 5. Stages the test fixture (1.3 MB demo WAV + hashes + expected
    transcript) and the six-test host-side suite into
    `$(brew --prefix dictation-stack)/share/dictation-stack/`.
-6. In `def post_install`, runs `dictate-stack-install`, which:
-   a. `uv tool install`s the five Python tools
-   b. Pins `torch>=2.11` for IFW (PLAN F27)
-   c. Applies the IFW torchcodec rpath patch + ad-hoc codesign
-   d. Verifies the patch with `otool -l`
 
-Wall time on a fast connection: 5–15 minutes (most of it is the
-torchcodec, transformers, and faster-whisper Python wheels). Disk:
-~1 GB for the formula prefix + a 25 GB HuggingFace cache that fills
-the first time each backend is exercised.
+It does NOT run `uv tool install` — that writes to `~/.cache/uv/` and
+`~/.local/share/uv/tools/`, which the brew sandbox blocks. Wall time:
+1–5 minutes (whisper.cpp source build).
+
+### `dictate-stack-install`
+
+Runs in your shell, NOT under brew's sandbox. Does the user-scope work:
+
+1. `uv tool install` the five Python tools: `openai-whisper`,
+   `mlx-whisper`, `whisperx`, `insanely-fast-whisper` (with
+   `--with "torch>=2.11"`), `mlx-vlm`.
+2. Locates the IFW `libtorchcodec_core7.dylib` via `uv tool dir` +
+   a `python3.*` glob.
+3. Applies the rpath patch:
+   `install_name_tool -add_rpath "$(brew --prefix ffmpeg@7)/lib" …`.
+4. Re-signs ad-hoc: `codesign --force --sign - …`.
+5. Verifies the patch via `otool -l`.
+
+Wall time: 5–15 minutes (most of it is the torchcodec, transformers,
+and faster-whisper Python wheels downloading).
+
+### `dictate-verify`
+
+Runs whisperX on the bundled fixture and verifies the F29 byte-stable
+transcript hash. First run pulls ~3 GB of weights from
+huggingface.co; subsequent runs are <40 s warm-cache. Exits 0/1.
 
 ## Verify — three pass-criteria, increasing rigor
 

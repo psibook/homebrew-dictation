@@ -22,8 +22,8 @@ BUDGET_GIB="${BUDGET_GIB:-12}"
 # shellcheck source=lib/common.sh
 . "$(dirname "$0")/lib/common.sh"
 
-WHISPERX="$(locate_whisperx)" || { log_fail "whisperx not found"; exit 1; }
-FIXTURE_DIR="$(locate_fixture_dir)" || { log_fail "fixture dir not found"; exit 1; }
+WHISPERX="$(require_tool whisperx locate_whisperx)" || exit 1
+FIXTURE_DIR="$(require_tool fixture-dir locate_fixture_dir)" || exit 1
 INPUT="$FIXTURE_DIR/demo-audio-for-gemma.wav"
 
 # Sampler: print summed RSS (in bytes) of $1 and all descendants every 0.5s.

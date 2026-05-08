@@ -70,58 +70,78 @@ class DictationStack < Formula
     (pkgshare/"host-tests").install Dir["stage_host_tests/*"]
   end
 
-  def post_install
-    # Run dictate-stack-install to:
-    #   - uv tool install the 5 Python tools (openai-whisper, mlx-whisper,
-    #     whisperx, insanely-fast-whisper, mlx-vlm)
-    #   - apply the IFW torchcodec rpath patch (PLAN.md F5/F27)
-    #
-    # This deliberately writes into ~/.local/share/uv/tools/ — outside the
-    # Homebrew prefix. ADR-002 (decisions/ADR-002-tap-structure.md) records
-    # the trade-off. If this step fails, the user can re-run
-    # `dictate-stack-install` by hand without re-installing the formula.
-    system bin/"dictate-stack-install"
-  end
+  # NOTE: `def post_install` deliberately does NOT run `dictate-stack-install`.
+  # That script `uv tool install`s the Python tools into ~/.local/share/uv/tools/
+  # and writes uv's package cache to ~/.cache/uv/. Both are user-scope dirs
+  # OUTSIDE the Homebrew prefix; brew's install sandbox blocks writes there
+  # with `Operation not permitted (os error 1)`. The original 0.1.0 release
+  # tried to auto-run dictate-stack-install in post_install and reproducibly
+  # failed on Tier 2 macOS hosts. The fix is to make the user-scope install
+  # an explicit user step — see the caveats below and ADR-002 postscript.
 
   def caveats
     <<~EOS
-      The dictation-stack post-install pulled five Python tools into your
-      uv tool directory (typically ~/.local/share/uv/tools/):
+      ─────────────────────────────────────────────────────────────────
+       Next step: complete the install (REQUIRED — one extra command)
+      ─────────────────────────────────────────────────────────────────
 
-        openai-whisper, mlx-whisper, whisperx,
-        insanely-fast-whisper (with torch>=2.11 + rpath patch),
-        mlx-vlm
+      Homebrew installed `whisper-cli`, the dictate-* helper scripts, and
+      the test fixtures, but it CANNOT install the five Python tools
+      (`whisperx`, `mlx-whisper`, `openai-whisper`, `insanely-fast-whisper`,
+      `mlx-vlm`) — `uv tool install` writes to ~/.cache/uv/ and
+      ~/.local/share/uv/tools/, which Homebrew's install sandbox blocks.
 
-      These are USER-SCOPE installs, not Homebrew-managed, and
-      `brew uninstall dictation-stack` will NOT remove them. To clean
-      them up:
+      Run this ONCE, after `brew install`, in your normal shell:
 
-        dictate-stack-install --uninstall
-        rm -rf ~/.cache/huggingface ~/.cache/whisper
+        dictate-stack-install
 
-      Add ~/.local/bin to your PATH if not already there:
+      That command:
+        - `uv tool install`s the five Python tools (~5–10 min)
+        - pins `torch>=2.11` for insanely-fast-whisper
+        - applies the IFW torchcodec rpath + ad-hoc-codesign patch
+          (PLAN.md F5/F27 — without this, IFW silently fails to load)
 
-        export PATH="$HOME/.local/bin:$PATH"
+      Then verify the install end-to-end:
 
-      Verify the install end-to-end (whisperX, ~3 GB weights on first run):
+        dictate-verify              # F29 byte-stable strict check
 
-        dictate-verify
-
-      Run the full host-side test suite (T1–T6):
+      Or run the full six-test host-side suite:
 
         $(brew --prefix dictation-stack)/share/dictation-stack/host-tests/run-all.sh
 
-      Pre-pull every backend's weights (~25 GB across HF and openai-whisper):
+      ─── Other commands you may want ───
 
-        dictate-warmup            # all backends
-        dictate-warmup --whisper-only   # skip Gemma 4, saves 16 GB
+      Pre-pull all model weights (~25 GB), so first-use isn't slow:
 
-      If you later run `uv tool upgrade insanely-fast-whisper`, re-apply
-      the IFW rpath patch:
+        dictate-warmup
+        dictate-warmup --whisper-only        # skips Gemma 4, saves 16 GB
+
+      After any `uv tool upgrade insanely-fast-whisper`, re-apply the
+      IFW rpath patch:
 
         dictate-stack-install --patch-only
 
-      Reference: https://github.com/psibook/homebrew-dictation
+      ─── PATH ───
+
+      `dictate-stack-install` puts the tool wrappers in ~/.local/bin.
+      If that's not on your PATH already, add it:
+
+        export PATH="$HOME/.local/bin:$PATH"
+
+      and persist the line in ~/.zshrc or ~/.bashrc.
+
+      ─── Uninstall ───
+
+      `brew uninstall dictation-stack` removes the prefix-installed bits
+      (whisper-cli, scripts, fixtures) but does NOT remove the
+      user-scope Python tools. To clean those up:
+
+        dictate-stack-install --uninstall
+        rm -rf ~/.cache/huggingface ~/.cache/whisper ~/.cache/uv
+
+      ─── Reference ───
+
+      https://github.com/psibook/homebrew-dictation
     EOS
   end
 
