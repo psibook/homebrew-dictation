@@ -8,6 +8,18 @@ relative to the `dictation-stack` formula's `version` field.
 
 ## [Unreleased]
 
+### Fixed
+- Formula's `def install` no longer trips `Errno::EPERM @ apply2files`
+  on stricter macOS configurations (Tier 2 hosts). Root cause:
+  `bin.install tap_root/"bin/foo"` did a move-or-copy-then-remove on
+  the tap-side path, and Homebrew's install sandbox grants READ but not
+  WRITE access to the tap directory — the source-removal step
+  failed with EPERM. Fix: copy tap-side files (`bin/`, `test-fixtures/`,
+  `host-tests/`) into the build's staging directory via `cp_r src/. dst/`
+  first, then `bin.install Dir["stage_bin/*"]`. Homebrew now operates
+  only on staged files it owns. Failure originally observed on
+  `gww@mbp23` (Tier 2 macOS); retest required.
+
 ### Added
 - Six-test host-side test suite under `host-tests/`:
   T1 smoke, T2 repeat-determinism, T3 RSS budget, T4 HF-offline,

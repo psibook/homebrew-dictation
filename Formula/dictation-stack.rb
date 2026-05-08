@@ -38,29 +38,36 @@ class DictationStack < Formula
     bin.install "build/bin/whisper-cli"
     bin.install "build/bin/whisper-server" if File.exist?("build/bin/whisper-server")
 
-    # ----- 2. Locate the tap root via __dir__ ------------------------
+    # ----- 2. Stage tap-side files into the build dir ----------------
     # The formula file lives at <tap>/Formula/dictation-stack.rb. __dir__
-    # is the Formula/ directory; its parent is the tap root, where bin/
-    # and test-fixtures/ live.
+    # is the Formula/ directory; its parent is the tap root, where bin/,
+    # test-fixtures/, and host-tests/ live.
+    #
+    # Homebrew's install sandbox grants READ access to the tap directory
+    # but blocks writes there. `bin.install src` does a move (or
+    # copy+remove-source); the source-removal step trips
+    # `Errno::EPERM @ apply2files` against the tap path on stricter
+    # macOS configurations (Tier 2 hosts). Workaround: copy tap-side
+    # files into the build's staging dir first (always writable), then
+    # invoke bin.install / pkgshare.install on the staged copies so
+    # Homebrew never has to delete from the tap directory.
     tap_root = Pathname.new(__dir__).parent
 
+    cp_r "#{tap_root}/bin/.",            "stage_bin"
+    cp_r "#{tap_root}/test-fixtures/.",  "stage_fixtures"
+    cp_r "#{tap_root}/host-tests/.",     "stage_host_tests"
+
     # ----- 3. Install the dictation-stack helper scripts -------------
-    bin.install tap_root/"bin/dictate-verify"
-    bin.install tap_root/"bin/dictate-stack-install"
-    bin.install tap_root/"bin/dictate-warmup"
+    bin.install Dir["stage_bin/*"]
 
     # ----- 4. Install test fixtures into pkgshare --------------------
-    pkgshare.install tap_root/"test-fixtures/demo-audio-for-gemma.wav"
-    pkgshare.install tap_root/"test-fixtures/demo-audio-for-gemma.input.sha256"
-    pkgshare.install tap_root/"test-fixtures/demo-audio-for-gemma.expected.txt"
-    pkgshare.install tap_root/"test-fixtures/demo-audio-for-gemma.expected.sha256"
-    pkgshare.install tap_root/"test-fixtures/PROVENANCE.md"
+    pkgshare.install Dir["stage_fixtures/*"]
 
     # ----- 5. Install host-tests/ so users can run the full suite ----
     # `$(brew --prefix dictation-stack)/share/dictation-stack/host-tests/run-all.sh`
     # gives the user the documented test runner without having to clone
     # this tap repo.
-    (pkgshare/"host-tests").install Dir[tap_root/"host-tests/*"]
+    (pkgshare/"host-tests").install Dir["stage_host_tests/*"]
   end
 
   def post_install
