@@ -1,5 +1,8 @@
 # Handoff: verify on the host
 
+> **Just want the commands?** **[TL;DR — four commands](TLDR.md)**.
+> This document is the deep-dive runbook with failure-mode triage.
+
 This runbook is the Lieutenant's last-mile step. The tap is published at
 `psibook/homebrew-dictation` (PUBLIC, default branch `main`). Run the
 following on the host Mac (NOT inside the gemma-on-vm UTM VM — the VM

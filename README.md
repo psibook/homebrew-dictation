@@ -1,5 +1,8 @@
 # homebrew-dictation
 
+> **In a hurry?** **[TL;DR — install in four commands](TLDR.md)**.
+> The rest of this README is the long-form rationale.
+
 A Homebrew tap that installs a fully-local audio→text + audio→reasoning
 stack on macOS in one command, then proves it works with a bundled
 verification script and a six-test host-side suite.
